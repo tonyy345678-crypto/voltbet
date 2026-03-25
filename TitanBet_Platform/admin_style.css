@@ -1,0 +1,89 @@
+:root {
+    --primary: #2c3e50;
+    --accent: #3498db;
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --bg: #f4f7f6;
+    --sidebar: #34495e;
+    --white: #ffffff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
+
+body { background: var(--bg); color: #333; height: 100vh; overflow: hidden; }
+
+.admin-wrapper { display: flex; height: 100%; }
+
+/* Sidebar */
+.admin-sidebar { width: 260px; background: var(--sidebar); color: #fff; display: flex; flex-direction: column; }
+.admin-logo { padding: 30px; font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.admin-logo span { font-size: 12px; color: var(--accent); }
+
+nav { flex: 1; padding: 20px 0; }
+.nav-btn { padding: 15px 30px; cursor: pointer; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
+.nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); border-left: 4px solid var(--accent); }
+
+.badge { background: var(--danger); font-size: 10px; padding: 2px 6px; border-radius: 10px; }
+
+.sidebar-footer { padding: 20px; font-size: 12px; opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.1); }
+
+/* Main */
+.admin-main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+.admin-top { background: var(--white); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.stat-mini { background: #eee; padding: 5px 15px; border-radius: 20px; font-weight: bold; color: var(--primary); }
+
+.tab-content { display: none; padding: 30px 40px; }
+.tab-content.active { display: block; animation: fadeIn 0.3s; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.welcome-card { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: #fff; padding: 30px; border-radius: 15px; margin-bottom: 30px; }
+
+.quick-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.q-card { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.q-card h4 { font-size: 24px; color: var(--success); margin-bottom: 5px; }
+.q-card.red h4 { color: var(--danger); }
+.q-card p { font-size: 14px; color: #777; }
+
+.section-card { background: var(--white); padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.section-card h3 { margin-bottom: 20px; color: var(--primary); }
+
+/* Table Elements */
+.requests-table-container { border-top: 1px solid #eee; padding-top: 10px; }
+.req-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #f9f9f9; }
+.req-row .amt { font-weight: bold; font-size: 18px; color: #2c3e50; }
+.approve-btn { background: var(--success); color: #fff; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+/* Bank Form */
+.bank-form-inline { display: flex; gap: 10px; margin-bottom: 30px; background: #f9f9f9; padding: 20px; border-radius: 10px; }
+.bank-form-inline input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+.bank-form-inline button { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+
+.banks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+.bank-item { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
+.bank-item .name { font-weight: bold; color: var(--accent); }
+.bank-item .iban { font-size: 12px; color: #888; margin-top: 4px; }
+.del-btn { color: var(--danger); border: none; background: none; cursor: pointer; font-size: 18px; }
+.no-data { text-align: center; padding: 50px; color: #aaa; }
+
+/* Admin Chat Styles */
+.admin-chat-user {
+    padding: 15px; 
+    border-bottom: 1px solid #222; 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    transition: 0.2s;
+}
+.admin-chat-user:hover {
+    background: #1a1a1a;
+}
+.admin-chat-user.active {
+    background: rgba(46, 204, 113, 0.2);
+    border-left: 3px solid var(--success);
+}
+.admin-chat-user.unread {
+    font-weight: bold;
+    color: var(--success);
+}

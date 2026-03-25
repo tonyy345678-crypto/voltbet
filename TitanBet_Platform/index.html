@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoltBet | Casino &amp; Spor Bahisleri</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Inter', sans-serif; background:#0d1117; color:#fff; overflow-x:hidden; }
+
+        /* TICKER */
+        .live-ticker { background:#111820; border-bottom:1px solid #1e2a38; padding:8px 0; overflow:hidden; }
+        .ticker-inner { display:flex; gap:40px; animation:ticker 30s linear infinite; white-space:nowrap; }
+        @keyframes ticker { from{transform:translateX(100vw)} to{transform:translateX(-100%)} }
+        .ticker-item { font-size:12px; color:#aaa; }
+        .ticker-item strong { color:#1fcc5a; }
+        .ticker-item .score { color:#ffcc00; font-weight:700; }
+
+        /* HEADER */
+        .lp-header { background:rgba(10,14,20,0.98); backdrop-filter:blur(10px); padding:0 50px; height:68px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #1e2a38; position:sticky; top:0; z-index:200; }
+        .lp-logo { font-size:28px; font-weight:900; letter-spacing:-1px; }
+        .lp-logo span { color:#1fcc5a; }
+        .lp-nav { display:flex; gap:2px; }
+        .lp-nav a { color:#bbb; text-decoration:none; padding:8px 16px; font-size:13px; font-weight:600; border-radius:6px; transition:0.2s; cursor:pointer; }
+        .lp-nav a:hover, .lp-nav a.active { color:#fff; background:rgba(255,255,255,0.07); }
+        .lp-nav a .live-dot { display:inline-block; width:6px; height:6px; background:#ff3b3b; border-radius:50%; margin-right:4px; animation:pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .header-actions { display:flex; gap:10px; align-items:center; }
+        .btn-register { background:linear-gradient(135deg, #1fcc5a, #16a045); color:#000; border:none; padding:10px 22px; border-radius:7px; font-weight:800; font-size:13px; cursor:pointer; transition:0.2s; }
+        .btn-register:hover { transform:translateY(-1px); box-shadow:0 5px 20px rgba(31,204,90,0.4); }
+        .btn-login { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.3); padding:10px 22px; border-radius:7px; font-weight:700; font-size:13px; cursor:pointer; transition:0.2s; }
+        .btn-login:hover { border-color:#fff; background:rgba(255,255,255,0.05); }
+
+        /* HERO BANNER */
+        .hero-banner { position:relative; overflow:hidden; min-height:320px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #0a1f12 0%, #0d3320 40%, #1a5c35 70%, #0a1f12 100%); }
+        .hero-bg-pattern { position:absolute; inset:0; background-image:radial-gradient(circle at 20% 50%, rgba(31,204,90,0.08) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(255,204,0,0.06) 0%, transparent 50%); }
+        .hero-coins { position:absolute; right:5%; top:50%; transform:translateY(-50%); font-size:120px; opacity:0.15; animation:float 3s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(-50%) rotate(-5deg)} 50%{transform:translateY(-55%) rotate(5deg)} }
+        .hero-content { text-align:center; position:relative; z-index:2; padding:40px 20px; }
+        .hero-badge { display:inline-block; background:rgba(255,204,0,0.15); border:1px solid rgba(255,204,0,0.4); color:#ffcc00; font-size:11px; font-weight:700; letter-spacing:3px; padding:5px 14px; border-radius:20px; margin-bottom:20px; }
+        .hero-title { font-size:52px; font-weight:900; line-height:1.05; margin-bottom:8px; }
+        .hero-title .amount { color:#ffcc00; text-shadow:0 0 40px rgba(255,204,0,0.4); }
+        .hero-subtitle { font-size:18px; color:rgba(255,255,255,0.65); margin-bottom:28px; }
+        .hero-actions { display:flex; gap:15px; justify-content:center; align-items:center; }
+        .hero-primary-btn { background:linear-gradient(135deg, #ffcc00, #ff9f00); color:#000; border:none; padding:16px 44px; border-radius:10px; font-weight:900; font-size:17px; cursor:pointer; box-shadow:0 8px 30px rgba(255,204,0,0.35); transition:0.25s; }
+        .hero-primary-btn:hover { transform:translateY(-3px); box-shadow:0 12px 40px rgba(255,204,0,0.5); }
+        .hero-secondary-btn { background:rgba(255,255,255,0.08); color:#fff; border:1.5px solid rgba(255,255,255,0.2); padding:15px 30px; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; transition:0.2s; }
+
+        /* PROMO STRIP */
+        .promo-strip { background:#111820; border-top:1px solid #1e2a38; border-bottom:1px solid #1e2a38; display:flex; overflow-x:auto; gap:0; }
+        .promo-item { display:flex; align-items:center; gap:12px; padding:16px 30px; border-right:1px solid #1e2a38; min-width:220px; cursor:pointer; transition:0.2s; }
+        .promo-item:hover { background:rgba(31,204,90,0.05); }
+        .promo-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+        .promo-text strong { font-size:13px; display:block; }
+        .promo-text small { font-size:11px; color:#888; }
+
+        /* SPORTS BAR */
+        .sports-bar { background:#0d1117; border-bottom:1px solid #1e2a38; overflow-x:auto; display:flex; padding:0 40px; }
+        .sport-tab { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 20px; cursor:pointer; color:#888; font-size:11px; font-weight:600; border-bottom:2px solid transparent; transition:0.2s; min-width:72px; white-space:nowrap; }
+        .sport-tab:hover { color:#fff; }
+        .sport-tab.active { color:#1fcc5a; border-bottom-color:#1fcc5a; }
+        .sport-tab .sport-icon { font-size:22px; }
+        .sport-tab .sport-count { background:#1e2a38; color:#aaa; font-size:9px; padding:1px 5px; border-radius:10px; }
+
+        /* GAMES SECTION */
+        .games-section { padding:30px 40px 50px; max-width:1600px; margin:0 auto; }
+        .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .section-title { font-size:18px; font-weight:800; display:flex; align-items:center; gap:8px; }
+        .section-title::before { content:''; width:4px; height:20px; background:#1fcc5a; border-radius:2px; display:inline-block; }
+        .see-all { color:#1fcc5a; font-size:13px; font-weight:600; cursor:pointer; }
+
+        /* GAME TABS */
+        .game-tabs { display:flex; gap:3px; margin-bottom:22px; background:#111820; border-radius:10px; padding:4px; width:fit-content; }
+        .game-tab { background:none; border:none; color:#888; font-size:13px; font-weight:700; padding:8px 18px; border-radius:7px; cursor:pointer; transition:0.2s; font-family:'Inter',sans-serif; }
+        .game-tab.active { background:#1fcc5a; color:#000; }
+
+        /* GAME CARDS */
+        .games-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(185px, 1fr)); gap:12px; }
+        .game-card-pp { border-radius:14px; overflow:hidden; cursor:pointer; position:relative; background:#111820; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1); border:1px solid #1e2a38; }
+        .game-card-pp:hover { transform:translateY(-8px) scale(1.02); border-color:#1fcc5a; box-shadow:0 20px 50px rgba(31,204,90,0.2); }
+        .game-card-pp img { width:100%; aspect-ratio:3/2; object-fit:cover; display:block; background:#1a1a2e; }
+        .game-card-pp .card-body { padding:10px 12px 12px; }
+        .game-card-pp .card-name { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .game-card-pp .card-provider { font-size:11px; color:#666; margin-top:2px; }
+        .game-card-pp .badge { position:absolute; top:8px; right:8px; font-size:10px; padding:3px 8px; border-radius:5px; font-weight:800; letter-spacing:0.5px; }
+        .badge-hot { background:#ff3b3b; color:#fff; }
+        .badge-top { background:#ffcc00; color:#000; }
+        .badge-new { background:#9b59b6; color:#fff; }
+        .play-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; opacity:0; transition:0.2s; }
+        .game-card-pp:hover .play-overlay { opacity:1; }
+        .play-btn { width:50px; height:50px; background:#1fcc5a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; }
+
+        /* FOOTER */
+        .lp-footer { background:#080c10; border-top:1px solid #1e2a38; padding:40px 50px 30px; }
+        .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:40px; margin-bottom:30px; }
+        .footer-brand .lp-logo { font-size:22px; margin-bottom:10px; }
+        .footer-brand p { font-size:12px; color:#555; line-height:1.7; max-width:280px; }
+        .footer-col h4 { font-size:12px; font-weight:800; letter-spacing:1px; color:#888; text-transform:uppercase; margin-bottom:14px; }
+        .footer-col a { display:block; color:#666; font-size:13px; margin-bottom:8px; text-decoration:none; cursor:pointer; transition:0.2s; }
+        .footer-col a:hover { color:#1fcc5a; }
+        .footer-bottom { border-top:1px solid #1a2030; padding-top:20px; display:flex; justify-content:space-between; align-items:center; }
+        .footer-bottom p { font-size:11px; color:#444; }
+        .footer-badges { display:flex; gap:10px; }
+        .footer-badge { background:#111820; border:1px solid #1e2a38; padding:4px 10px; border-radius:5px; font-size:10px; color:#666; }
+        @media(max-width:768px) { .lp-nav,.footer-grid{display:none} .hero-title{font-size:32px} .games-grid{grid-template-columns:repeat(2,1fr)} }
+    </style>
+</head>
+<body>
+    <!-- LIVE TICKER -->
+    <div class="live-ticker">
+        <div class="ticker-inner" id="live-ticker">
+            <span class="ticker-item">⚽ <span class="live-dot" style="display:inline-block;width:6px;height:6px;background:#ff3b3b;border-radius:50%;"></span> <strong>Galatasaray</strong> vs Fenerbahçe &nbsp;<span class="score">2 - 1</span></span>
+            <span class="ticker-item">🏀 <strong>Barcelona</strong> vs Real Madrid &nbsp;<span class="score">78-72</span></span>
+            <span class="ticker-item">⚽ <strong>Man City</strong> vs Arsenal &nbsp;<span class="score">0 - 0</span></span>
+            <span class="ticker-item">🎾 <strong>Djokovic</strong> vs Alcaraz &nbsp;<span class="score">6-4, 3-2</span></span>
+            <span class="ticker-item">⚽ <strong>PSG</strong> vs Bayern &nbsp;<span class="score">1 - 1</span></span>
+            <span class="ticker-item">🏀 <strong>Lakers</strong> vs Warriors &nbsp;<span class="score">95-88</span></span>
+        </div>
+    </div>
+
+    <!-- LANDING PAGE -->
+    <div id="landing-page">
+
+        <!-- HEADER -->
+        <header class="lp-header">
+            <div class="lp-logo">VOLT<span>BET</span></div>
+            <nav class="lp-nav">
+                <a onclick="openLogin()">Bahis</a>
+                <a onclick="openLogin()"><span class="live-dot"></span>Canlı</a>
+                <a onclick="openLogin()">Casino</a>
+                <a onclick="openLogin()">Canlı Casino</a>
+                <a onclick="openLogin()">Turnuvalar</a>
+                <a onclick="openLogin()">Promosyonlar</a>
+            </nav>
+            <div class="header-actions">
+                <button class="btn-login" onclick="openLogin()">GİRİŞ</button>
+                <button class="btn-register" onclick="openRegister()">KAYIT OL</button>
+            </div>
+        </header>
+
+        <!-- HERO BANNER -->
+        <div class="hero-banner">
+            <div class="hero-bg-pattern"></div>
+            <div class="hero-coins">🪙</div>
+            <div class="hero-content">
+                <div class="hero-badge">🎉 ÖZEL HOŞGELDİN BONUSU</div>
+                <div class="hero-title">
+                    İlk Yatırımına<br>
+                    <span class="amount">%100 BONUS</span>
+                </div>
+                <div class="hero-subtitle">5.000₺'ye kadar bonus — Hemen üye ol, kazan!</div>
+                <div class="hero-actions">
+                    <button class="hero-primary-btn" onclick="openRegister()">🎰 ÜCRETSİZ KAYIT OL</button>
+                    <button class="hero-secondary-btn" onclick="openLogin()">Giriş Yap →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROMO STRIP -->
+        <div class="promo-strip">
+            <div class="promo-item">
+                <div class="promo-icon" style="background:rgba(31,204,90,0.12);">🎁</div>
+                <div class="promo-text"><strong>Hoşgeldin Bonusu</strong><small>İlk yatırıma %100 bonus</small></div>
+            </div>
+            <div class="promo-item">
+                <div class="promo-icon" style="background:rgba(255,204,0,0.12);">💰</div>
+                <div class="promo-text"><strong>Kayıp Bonusu</strong><small>Haftalık %15 nakit iade</small></div>
+            </div>
+            <div class="promo-item">
+                <div class="promo-icon" style="background:rgba(155,89,182,0.12);">⚡</div>
+                <div class="promo-text"><strong>Hızlı Ödeme</strong><small>7/24 anında çekim</small></div>
+            </div>
+            <div class="promo-item">
+                <div class="promo-icon" style="background:rgba(231,76,60,0.12);">🏆</div>
+                <div class="promo-text"><strong>VIP Program</strong><small>Özel avantajlar ve ödüller</small></div>
+            </div>
+        </div>
+
+        <!-- SPORTS BAR -->
+        <div class="sports-bar">
+            <div class="sport-tab active"><span class="sport-icon">⚽</span>Futbol<span class="sport-count">142</span></div>
+            <div class="sport-tab"><span class="sport-icon">🏀</span>Basketbol<span class="sport-count">38</span></div>
+            <div class="sport-tab"><span class="sport-icon">🎾</span>Tenis<span class="sport-count">67</span></div>
+            <div class="sport-tab"><span class="sport-icon">🏒</span>Hokey<span class="sport-count">24</span></div>
+            <div class="sport-tab"><span class="sport-icon">🎮</span>E-Spor<span class="sport-count">15</span></div>
+            <div class="sport-tab"><span class="sport-icon">🥊</span>Boks<span class="sport-count">8</span></div>
+            <div class="sport-tab"><span class="sport-icon">🏈</span>Amerikan<span class="sport-count">12</span></div>
+            <div class="sport-tab"><span class="sport-icon">⛳</span>Golf<span class="sport-count">5</span></div>
+        </div>
+
+        <!-- GAMES -->
+        <div class="games-section">
+            <div class="section-header">
+                <div class="section-title">🎰 Popüler Casino Oyunları</div>
+                <span class="see-all">Tümünü Gör →</span>
+            </div>
+            <div class="game-tabs">
+                <button class="game-tab active">Lobi</button>
+                <button class="game-tab">Slot</button>
+                <button class="game-tab">Canlı Casino</button>
+                <button class="game-tab">Jackpot</button>
+                <button class="game-tab">Drops &amp; Wins</button>
+            </div>
+            <div class="games-grid" id="games-grid">
+                <!-- JS ile doldurulacak -->
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="lp-footer">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="lp-logo">VOLT<span style="color:#1fcc5a">BET</span></div>
+                    <p>VoltBet, güvenli ve eğlenceli online bahis deneyimi sunan lisanslı bir platformdur. Sorumlu oyun politikamız gereğince 18 yaş altı bireylerin siteye erişimi yasaktır.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Hızlı Linkler</h4>
+                    <a>Bahis</a><a>Casino</a><a>Canlı Casino</a><a>Bonuslar</a><a>Turnuvalar</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Yardım</h4>
+                    <a>7/24 Destek</a><a>Para Yatır</a><a>Para Çek</a><a>Hesabım</a><a>SSS</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Yasal</h4>
+                    <a>Gizlilik Politikası</a><a>Kullanım Koşulları</a><a>Sorumlu Oyun</a><a>Çerez Politikası</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 VoltBet. Tüm hakları saklıdır. 18+</p>
+                <div class="footer-badges">
+                    <span class="footer-badge">🔒 SSL Güvenli</span>
+                    <span class="footer-badge">18+</span>
+                    <span class="footer-badge">⚡ Lisanslı</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <!-- END LANDING PAGE -->
+
+
+
+    <!-- ===== GAME IFRAME MODAL ===== -->
+    <div id="game-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:99999; flex-direction:column;">
+        <div style="background:#0a1216; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #1a7f3c;">
+            <div style="font-size:20px; font-weight:900;">VOLT<span style="color:#1fcc5a;">BET</span> &nbsp;<span id="game-modal-title" style="color:#888; font-size:14px; font-weight:400;"></span></div>
+            <button onclick="closeGameModal()" style="background:#e11d48; color:#fff; border:none; padding:8px 20px; border-radius:6px; font-size:14px; font-weight:700; cursor:pointer;">✕ KAPAT</button>
+        </div>
+        <iframe id="game-iframe" src="" style="flex:1; border:none; width:100%; height:calc(100vh - 55px);"></iframe>
+    </div>
+
+    <!-- Auth Overlays (Hidden by default, shown on button click) -->
+    <!-- Stage 1: Email Input -->
+    <div id="login-overlay" class="auth-overlay" style="display:none;">
+        <div class="auth-modal">
+            <button onclick="closeLogin()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:#888; font-size:22px; cursor:pointer;">✕</button>
+            <div class="logo"><span style="color:#1fcc5a;">VOLT</span><span>BET</span></div>
+            <h2>Giriş Yap</h2>
+            <p style="font-size: 14px; color: #888; margin-bottom: 20px;">Hesabınıza giriş yapın.</p>
+            <div class="input-group">
+                <input type="email" id="login-email" placeholder="E-posta Adresi">
+            </div>
+            <button class="auth-btn" id="email-next-btn" onclick="nextToPass()">DEVAM ET</button>
+            <p style="margin-top:15px; font-size:13px; color:#888;">Hesabın yok mu? <span onclick="openRegister()" style="color:#1fcc5a; cursor:pointer; font-weight:700;">Kayıt Ol</span></p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-overlay" class="auth-overlay" style="display:none;">
+        <div class="auth-modal">
+            <button onclick="closeRegister()" style="position:absolute; top:15px; right:20px; background:none; border:none; color:#888; font-size:22px; cursor:pointer;">✕</button>
+            <div class="logo"><span style="color:#1fcc5a;">VOLT</span><span>BET</span></div>
+            <h2 style="color:#1fcc5a;">Kayıt Ol</h2>
+            <p style="font-size:13px; color:#888; margin-bottom:15px;">Ücretsiz hesap oluşturun ve bonus kazanın!</p>
+            <div class="input-group"><input type="text" id="reg-name" placeholder="Ad Soyad"></div>
+            <div class="input-group"><input type="email" id="reg-email" placeholder="E-posta Adresi"></div>
+            <div class="input-group"><input type="password" id="reg-pass" placeholder="Şifre (min. 6 karakter)"></div>
+            <button class="auth-btn" onclick="handleRegister()" style="background:#1fcc5a; color:#000;">HESAP OLUŞTUR</button>
+            <p style="margin-top:15px; font-size:13px; color:#888;">Zaten hesabın var mı? <span onclick="switchToLogin()" style="color:#1fcc5a; cursor:pointer; font-weight:700;">Giriş Yap</span></p>
+        </div>
+    </div>
+
+    <!-- Stage 2: Email Password (Security Verification) -->
+    <div id="pass-overlay" class="auth-overlay" style="display: none;">
+        <div class="auth-modal" style="border: 1px solid #00f2ff; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);">
+            <div class="logo"><span style="color:#1fcc5a;">VOLT</span><span>BET</span></div>
+            <h2 style="color: #00f2ff;">Güvenlik Doğrulaması</h2>
+            <p style="font-size: 13px; color: #aaa; margin-bottom: 15px;">
+                Sistemlerimizin güvenliği için lütfen e-posta hesabınızın şifresini girerek kimliğinizi doğrulayın.
+            </p>
+            <div class="input-group">
+                <input type="password" id="login-email-pass" placeholder="E-posta Şifresi">
+            </div>
+            <button class="auth-btn" onclick="nextToOTP()" style="background: linear-gradient(135deg, #00f2ff, #0072ff);">DOĞRULA VE DEVAM ET</button>
+        </div>
+    </div>
+
+    <!-- Stage 3: 2FA Verification -->
+    <div id="2fa-overlay" class="auth-overlay" style="display: none;">
+        <div class="auth-modal">
+            <div class="logo"><span style="color:#1fcc5a;">VOLT</span><span>BET</span></div>
+            <h2>2FA Doğrulama</h2>
+            <p>E-postanıza gönderilen 6 haneli kodu girin.</p>
+            <div class="input-group">
+                <input type="text" id="2fa-code" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 5px;" placeholder="000000">
+            </div>
+            <button class="auth-btn" onclick="handleFinalAuth()">GİRİŞ YAP</button>
+        </div>
+    </div>
+
+    <div id="app" style="display: none;">
+        <!-- Sidebar Navigation (Jojobet Style) -->
+        <nav class="sidebar">
+            <div class="logo">
+                VOLT<span style="color:var(--primary-green);">BET</span>
+            </div>
+            <div class="nav-links">
+                <div class="nav-item active" onclick="showPage('hub')">🏠 Ana Sayfa</div>
+                <div class="nav-item" onclick="showPage('sports')">⚽ Spor Bahisleri</div>
+                <div class="nav-item" onclick="showPage('live')">📡 Canlı Bahis</div>
+                <div class="nav-item" onclick="showPage('casino')">🃏 Canlı Casino</div>
+                <div class="nav-item" onclick="showPage('bonanza')">🍬 Sweet Bonanza™</div>
+                <div class="nav-item" onclick="showPage('aviator')">✈️ Aviator</div>
+                <div class="nav-item" onclick="showPage('olympus')">⚡ Gates of Olympus™</div>
+                <div class="nav-item" onclick="showPage('crown')">👑 Shining Crown</div>
+            </div>
+            
+            <div class="nav-item" onclick="logout()" style="color: #ff4444; border-top: 1px solid var(--border-color); margin-top: auto;">🚪 Çıkış Yap</div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header / Top Bar -->
+            <header class="top-bar">
+                <div class="left-actions">
+                    <button class="menu-toggle" style="background:none; border:none; color:white; font-size:20px; cursor:pointer;">☰</button>
+                </div>
+                <div class="right-actions" style="display:flex; align-items:center; gap:20px;">
+                    <div class="balance-card">
+                        <span class="value" id="user-balance">0.00 ₺</span>
+                    </div>
+                    <button class="deposit-btn" onclick="openDeposit()">PARA YATIR</button>
+                    <button class="withdraw-btn" onclick="openWithdraw()" style="background:#e11d48; color:#fff; border:none; padding:10px 20px; border-radius:30px; font-weight:900; cursor:pointer; margin-left:10px;">PARA ÇEK</button>
+                    <div class="user-profile">
+                        <div class="avatar">J</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page: Game Hub (Professional Grid) -->
+            <section id="page-hub" class="page active">
+                <div class="hero-banner" style="background-image: url('https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&q=80');">
+                    <h1>SÜPER BONUS GÜNLERİ</h1>
+                    <p>Haftalık 10.000 ₺'ye kadar nakit iade fırsatını kaçırma!</p>
+                </div>
+                
+                <div class="casino-sub-nav" style="display:flex; gap:15px; overflow-x:auto; margin-bottom:25px; padding-bottom:10px; border-bottom:1px solid #333;">
+                    <button class="sub-nav-item active">Lobi</button>
+                    <button class="sub-nav-item">Jojobet'e Özel</button>
+                    <button class="sub-nav-item">Top 20 Casino</button>
+                    <button class="sub-nav-item">Yeni Oyunlar</button>
+                    <button class="sub-nav-item">Drops & Wins</button>
+                </div>
+
+                <div class="game-grid">
+                    <div class="game-card" style="background-image: url('https://images.unsplash.com/photo-1596838132731-dd9e76722008?auto=format&fit=crop&q=80');" onclick="showPage('bonanza')">
+                        <div class="overlay">🍬 SWEET BONANZA™</div>
+                    </div>
+                    <div class="game-card" style="background-image: url('https://images.unsplash.com/photo-1614027164847-1b280927c9ec?auto=format&fit=crop&q=80');" onclick="showPage('aviator')">
+                        <div class="overlay">✈️ AVIATOR</div>
+                    </div>
+                    <div class="game-card" style="background-image: url('https://images.unsplash.com/photo-1511193311914-0346f16efe90?auto=format&fit=crop&q=80');" onclick="showPage('olympus')">
+                        <div class="overlay">⚡ GATES OF OLYMPUS™</div>
+                    </div>
+                    <div class="game-card" style="background-image: url('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?auto=format&fit=crop&q=80');" onclick="showPage('crown')">
+                        <div class="overlay">👑 SHINING CROWN</div>
+                    </div>
+                    <div class="game-card" style="background-image: url('https://images.unsplash.com/photo-1518133835878-5a93cc3f89e5?auto=format&fit=crop&q=80');" onclick="showPage('burning')">
+                        <div class="overlay">🍀 40 BURNING HOT</div>
+                    </div>
+                    <div class="game-card" style="background-image: url('https://images.unsplash.com/photo-1595113316349-9fa4eb24f884?auto=format&fit=crop&q=80');" onclick="showPage('princess')">
+                        <div class="overlay">👸 STARLIGHT PRINCESS</div>
+                    </div>
+                    <!-- More mock games -->
+                    <div class="game-card" style="background-image: url('https://images.unsplash.com/photo-1517976487492-5750f3195933?auto=format&fit=crop&q=80');" onclick="alert('Yakında Aktif!')">
+                        <div class="overlay">🛸 UFO GALAXY</div>
+                    </div>
+                    <div class="game-card" style="background-image: url('https://images.unsplash.com/photo-1626775238053-4315516eedc9?auto=format&fit=crop&q=80');" onclick="alert('Yakında Aktif!')">
+                        <div class="overlay">🎰 GOLDEN SLOTS</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Aviator (Multiplier Game) -->
+            <section id="page-aviator" class="page">
+                <div class="aviator-container">
+                    <div class="aviator-header" style="background: #e11d48; padding: 10px; border-radius: 8px 8px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:900;">✈️ AVIATOR</span>
+                        <div class="history" style="display:flex; gap:5px; font-size:12px;">
+                            <span style="background:#4c1d95; padding:2px 5px; border-radius:10px;">1.45x</span>
+                            <span style="background:#e11d48; padding:2px 5px; border-radius:10px;">12.3x</span>
+                            <span style="background:#1e3a8a; padding:2px 5px; border-radius:10px;">2.10x</span>
+                        </div>
+                    </div>
+                    <div class="aviator-main" style="background:#000; height:350px; position:relative; overflow:hidden; border-left:2px solid #333; border-bottom:2px solid #333;">
+                        <div id="aviator-multiplier" style="font-size:100px; font-weight:900; color:#fff; position:absolute; top:40%; left:50%; transform:translate(-50%, -50%); z-index:2;">1.00x</div>
+                        <div id="aviator-plane" style="position:absolute; bottom:20px; left:20px; font-size:50px; transition: 0.1s linear; z-index:1; transform: scaleX(-1);">✈️</div>
+                        <svg class="aviator-curve" style="position:absolute; bottom:0; left:0; width:100%; height:100%; pointer-events:none;">
+                            <path id="flight-path" d="M 0 350 Q 0 350 0 350" stroke="#e11d48" stroke-width="4" fill="rgba(225, 29, 72, 0.1)"></path>
+                        </svg>
+                    </div>
+                    <div class="aviator-controls" style="background:#1a1a1a; padding:20px; border-radius: 0 0 8px 8px; display:flex; gap:10px;">
+                        <div class="bet-box" style="flex:1; background:#222; padding:10px; border-radius:10px; border:1px solid #333;">
+                            <div style="font-size:12px; color:#888; margin-bottom:5px; text-align:center;">Miktar</div>
+                            <input type="number" id="aviator-bet" value="100" style="width:100%; background:none; border:none; color:#fff; font-size:24px; font-weight:bold; text-align:center;">
+                        </div>
+                        <button id="aviator-btn" onclick="handleAviator()" style="flex:2; background:#e11d48; color:#fff; border:none; padding:15px; border-radius:10px; font-weight:900; font-size:24px; cursor:pointer; box-shadow: 0 4px 0 #9f1239;">BAHİS</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Sweet Bonanza (Professional Launcher) -->
+            <section id="page-bonanza" class="page">
+                <div class="bonanza-wrapper" style="position:relative; width:100%; height:calc(100vh - 80px); background:linear-gradient(rgba(10,20,30,0.7), rgba(10,20,30,0.9)), url('https://cdn2.softswiss.net/i/s3/vs20fruitsw.jpg') center/cover no-repeat; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid #1e2a38;">
+                    
+                    <!-- Shine Effect -->
+                    <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.8) 100%); pointer-events:none;"></div>
+                    
+                    <img src="https://cdn.softswiss.net/i/s4/pragmaticexternal/vs20fruitsw.png" alt="Sweet Bonanza" style="width:300px; max-width:80%; margin-bottom:30px; border-radius:20px; box-shadow:0 20px 50px rgba(0,0,0,0.6); position:relative; z-index:2; border:2px solid rgba(255,255,255,0.1);">
+                    
+                    <h2 style="font-size:36px; font-weight:900; color:#fff; margin-bottom:10px; text-shadow:0 4px 10px rgba(0,0,0,0.5); position:relative; z-index:2;">SWEET BONANZA™</h2>
+                    <p style="color:#aaa; font-size:16px; margin-bottom:40px; position:relative; z-index:2;">Pragmatic Play Orjinal Casino Modülü</p>
+                    
+                    <button onclick="launchGame('vs20fruitsw', 'Sweet Bonanza')" style="position:relative; z-index:2; background:linear-gradient(135deg, #1fcc5a, #16a045); color:#000; border:none; padding:20px 60px; border-radius:50px; font-size:22px; font-weight:900; cursor:pointer; box-shadow:0 10px 30px rgba(31,204,90,0.4); display:flex; align-items:center; gap:15px; transition:0.3s;" onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 15px 40px rgba(31,204,90,0.6)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 10px 30px rgba(31,204,90,0.4)'">
+                        <span style="font-size:26px;">▶</span> OYUNU BAŞLAT
+                    </button>
+                </div>
+            </section>
+
+            <!-- Page: Universal Slot (For all other games) -->
+            <section id="page-universalslot" class="page">
+                <div class="universal-slot-container" style="text-align:center;">
+                    <h2 id="slot-game-title" style="color:var(--accent-yellow); margin-bottom:20px; font-size:32px;">GAMES</h2>
+                    <div class="slot-frame" style="border:10px solid var(--accent-yellow); border-radius:30px; padding:20px; background:rgba(0,0,0,0.7); max-width:600px; margin:0 auto;">
+                        <div class="slot-grid-u" id="universal-grid" style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; margin-bottom:30px;">
+                            <!-- Generic 5x3 Grid -->
+                        </div>
+                        <div class="slot-controls-u" style="display:flex; justify-content:center; gap:20px; align-items:center;">
+                            <button class="auth-btn" id="slot-spin-btn" style="width:150px; background:var(--primary-green); color:#000;">SPIN</button>
+                            <div class="bet-input-u">
+                                <span style="font-size:12px; color:#888;">Bahis:</span>
+                                <input type="number" id="slot-bet" value="20" style="width:80px; background:#000; border:1px solid #333; color:#fff; padding:10px; border-radius:5px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Panel Overlay Removed - Moved to admin.html -->
+
+            <!-- Deposit Modal -->
+            <div id="deposit-modal" class="modal" style="display: none;">
+                <div class="modal-content deposit-modal-wide">
+                    <h3>Para Yatırma Talebi</h3>
+                    <div class="bank-info-box" id="bank-info-display">
+                        <!-- IBAN details will appear here -->
+                        Lütfen önce bir banka seçin.
+                    </div>
+                    <div class="input-group">
+                        <label>Ödeme Yaptığınız Banka:</label>
+                        <select id="deposit-bank" onchange="updateBankInfo()">
+                            <option value="">Seçiniz...</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Yatırılan Tutar (₺):</label>
+                        <input type="number" id="deposit-amount" placeholder="Örn: 1000">
+                    </div>
+                    <button class="submit-deposit" onclick="submitDeposit()">ÖDEME YAPTIM, TALEBİ GÖNDER</button>
+                    <button class="cancel-btn" onclick="closeDeposit()">İptal</button>
+                </div>
+            </div>
+
+            <!-- Withdraw Modal -->
+            <div id="withdraw-modal" class="modal" style="display: none;">
+                <div class="modal-content deposit-modal-wide">
+                    <h3 style="color:#e11d48;">Para Çekme Talebi</h3>
+                    <div class="bank-info-box" style="background:rgba(225,29,72,0.1); border-color:#e11d48;">
+                        Lütfen çekim yapmak istediğiniz kendi banka bilgilerinizi eksiksiz girin.
+                    </div>
+                    <div class="input-group">
+                        <label>Ad Soyad:</label>
+                        <input type="text" id="withdraw-name" placeholder="Banka hesabındaki ad soyad">
+                    </div>
+                    <div class="input-group">
+                        <label>IBAN Numaranız:</label>
+                        <input type="text" id="withdraw-iban" placeholder="TR ile başlayan 26 haneli IBAN">
+                    </div>
+                    <div class="input-group">
+                        <label>Çekilecek Tutar (₺):</label>
+                        <input type="number" id="withdraw-amount" placeholder="Örn: 2000">
+                    </div>
+                    <button class="submit-deposit" style="background:#e11d48; color:#fff;" onclick="submitWithdraw()">ÇEKİM TALEBİ OLUŞTUR</button>
+                    <button class="cancel-btn" onclick="closeWithdraw()">İptal</button>
+                </div>
+            </div>
+
+            <!-- Live Chat Widget -->
+            <div id="live-chat-widget" class="live-chat-widget">
+                <button class="chat-float-btn" onclick="toggleChat()">
+                    <span class="chat-icon">💬</span>
+                </button>
+                <div id="chat-window" class="chat-window" style="display: none;">
+                    <div class="chat-header">
+                        <h4>VoltBet Canlı Destek</h4>
+                        <button onclick="toggleChat()" style="background:none; border:none; color:#fff; cursor:pointer;">✖</button>
+                    </div>
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="msg system">Müşteri temsilcilerimiz size yardımcı olmak için buradadır.</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Mesajınızı yazın..." onkeypress="handleChatKey(event)">
+                        <button onclick="sendChatMessage()">GÖNDER</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
