@@ -172,12 +172,16 @@ function approveDeposit() {
 
 // ── WITHDRAW (ÇEKİM) TALEPLERİ GÖSTERİM & YÖNETİM (HAVUZ SİSTEMİ) ───────
 function renderWithdraws() {
-    const list = document.getElementById('withdraw-requests-list');
+    const list = document.getElementById('withdraw-requests-list-body');
     const badge = document.getElementById('withdraw-count-badge');
+    const totalCountSpan = document.getElementById('withdraw-total-count');
+    
     let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
     
+    if (totalCountSpan) totalCountSpan.innerText = pendingWithdraws.length;
+
     if (pendingWithdraws.length === 0) {
-        if(list) list.innerHTML = '<div class="no-data">Bekleyen çekim talebi bulunamadı.</div>';
+        if(list) list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Bekleyen çekim talebi bulunamadı.</td></tr>';
         if(badge) {
             badge.innerText = '0';
             badge.style.display = 'none';
@@ -197,57 +201,65 @@ function renderWithdraws() {
             const isReservedByMe = req.reservedBy === adminProfile.name;
             const isReservedByOther = req.reservedBy && req.reservedBy !== adminProfile.name;
 
-            let infoHtml = '';
+            let nameHtml = '';
+            let ibanHtml = '';
             let actionHtml = '';
 
+            // Format date
+            let d = new Date(req.timestamp || Date.now());
+            let dateStr = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+
+            let formattedAmt = `<span style="color:#02b875; border:1px solid #02b875; padding:3px 8px; border-radius:3px; font-weight:600;">₺${req.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})}</span>`;
+            let kaynakHtml = `<span style="color:#e11d48; border:1px solid #e11d48; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:600;">MANUEL</span>`;
+
             if (isReservedByMe) {
-                // Sadece rezerve edildiğinde IBAN ve İsim görünür
-                infoHtml = `
-                    <div class="amt">${req.amount.toFixed(2)} ₺ <span style="font-size:12px; color:#1fcc5a; 1px solid #1fcc5a; padding:2px 5px; border-radius:5px;">(Sizde)</span></div>
-                    <div style="font-size:12px; color:#ddd; margin-top:5px;">
-                        <span style="color:#00f2ff; font-weight:bold;">IBAN:</span> ${req.iban} <br>
-                        <span style="color:#00f2ff; font-weight:bold;">Ad Soyad:</span> ${req.name}<br>
-                        <span style="color:#888;">E-Posta: ${req.userEmail} | ID: #${req.id}</span>
-                    </div>
-                `;
+                // Fully visible
+                nameHtml = `<div style="display:inline-flex; align-items:center; gap:5px; border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name} <span style="cursor:pointer;" title="Kopyala">📋</span></div>`;
+                ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:500;">${req.iban}</div>`;
+                
                 actionHtml = `
-                    <button class="approve-btn" onclick="approveWithdraw(${req.id})">Gönderildi (ONAY)</button>
-                    <button class="reject-btn" onclick="rejectWithdraw(${req.id})" style="background:#e11d48; color:#fff; border:none; padding:8px 15px; border-radius:5px; font-weight:700; cursor:pointer;">İptal (İADE ET)</button>
-                    <button onclick="releaseWithdraw(${req.id})" style="background:#33495e; color:#fff; border:none; padding:8px 15px; border-radius:5px; font-weight:700; cursor:pointer;">Havuza Bırak</button>
+                    <div style="display:flex; gap:5px; justify-content:center;">
+                        <button onclick="approveWithdraw(${req.id})" style="background:#fff; border:1px solid #02b875; color:#02b875; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Onayla
+                        </button>
+                        <button onclick="releaseWithdraw(${req.id})" style="background:#fff; border:1px solid #e11d48; color:#e11d48; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg> Havuza Bırak
+                        </button>
+                        <button onclick="rejectWithdraw(${req.id})" style="background:#e11d48; border:1px solid #e11d48; color:#fff; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px;" title="Talebi Reddet ve İade Et">İptal</button>
+                    </div>
                 `;
             } else if (isReservedByOther) {
-                // Başkası rezerve ettiyse IBAN gizli
-                infoHtml = `
-                    <div class="amt" style="color:#888;">${req.amount.toFixed(2)} ₺</div>
-                    <div style="font-size:12px; color:#666;">
-                        Kimde: <b>${req.reservedBy}</b><br>
-                        E-Posta: ${req.userEmail} | ID: #${req.id}
-                    </div>
-                `;
+                // Masked, but show who has it
+                nameHtml = `<div style="font-weight:600; color:#888;">Başka Yetkilide</div>`;
+                ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#888; background:#f9f9f9;">İşlemde: ${req.reservedBy}</div>`;
                 actionHtml = `<span style="color:#888; font-size:12px; font-weight:bold;">Rezerve Edildi</span>`;
             } else {
-                // Havuzda boşta bekliyor, IBAN GİZLİ
-                infoHtml = `
-                    <div class="amt">${req.amount.toFixed(2)} ₺</div>
-                    <div style="font-size:12px; color:#888;">
-                        <span style="background:#444; color:#fff; padding:2px 4px; border-radius:3px;">IBAN ve Ad Soyad Gizli</span><br>
-                        E-Posta: ${req.userEmail} | ID: #${req.id}
-                    </div>
-                `;
+                // Havuzda, Masked
+                let maskedName = req.name.substring(0,2) + '********';
+                nameHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${maskedName}</div>`;
+                ibanHtml = `<div style="color:#e11d48; border:1px solid #e11d48; padding:4px 10px; border-radius:4px; font-weight:500;">IBAN Gizli (Rezerve Et)</div>`;
+                
                 actionHtml = `
-                    <button onclick="reserveWithdraw(${req.id})" style="background:#f39c12; color:#fff; border:none; padding:8px 20px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:14px;">Rezerve Et</button>
+                    <button onclick="reserveWithdraw(${req.id})" style="background:#fff; border:1px solid #f39c12; color:#f39c12; padding:5px 15px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px; margin:auto;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Rezerve Et
+                    </button>
                 `;
             }
 
             html += `
-                <div class="req-row" style="${isReservedByMe ? 'border-left:4px solid #1fcc5a; background:rgba(31,204,90,0.05);' : ''}">
-                    <div class="info">
-                        ${infoHtml}
-                    </div>
-                    <div class="actions" style="display:flex; gap:10px;">
-                        ${actionHtml}
-                    </div>
-                </div>
+                <tr style="border-bottom:1px solid #eee; background:${isReservedByMe ? '#fbfdfc' : '#fff'}; transition:background 0.2s;">
+                    <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${req.id}</td>
+                    <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${nameHtml}</td>
+                    <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${ibanHtml}</td>
+                    <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555;">Havale/EFT</td>
+                    <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${formattedAmt}</td>
+                    <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${kaynakHtml}</td>
+                    <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555;">Kompozit</td>
+                    <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555; white-space:nowrap;">
+                        ${dateStr} <span style="border:1px solid #ddd; padding:1px 4px; border-radius:3px; font-size:10px; margin-left:3px;">17</span>
+                    </td>
+                    <td style="padding:15px 10px;">${actionHtml}</td>
+                </tr>
             `;
 
         });
@@ -275,9 +287,78 @@ function releaseWithdraw(id) {
     }
 }
 
+let currentWithdrawProcessingId = null;
+
 function approveWithdraw(id) {
-    if(!confirm("Kullanıcıya parayı gerçekten gönderdiniz mi? Bu işlem talebi silecektir.")) return;
+    let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
+    let req = pendingWithdraws.find(req => req.id === id);
+    if(!req) return;
     
+    currentWithdrawProcessingId = id;
+    
+    // Değerleri Modal'a Doldur
+    document.getElementById('modal-top-id').innerText = `Talep ID : ${req.id}`;
+    document.getElementById('modal-top-name').innerText = `Alıcı : ${req.name}`;
+    document.getElementById('modal-top-amount').innerText = `Tutar : ₺${req.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})}`;
+    
+    document.getElementById('modal-input-id').value = req.id;
+    document.getElementById('modal-input-name').value = req.name;
+    document.getElementById('modal-input-username').value = req.userEmail.split('@')[0]; // Username placeholder
+    document.getElementById('modal-input-amount1').value = `₺${req.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})}`;
+    
+    let d = new Date(req.timestamp || Date.now());
+    document.getElementById('modal-input-date').value = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR');
+    
+    // Banka kısmını varsayılan doldur
+    document.getElementById('modal-bank-logo-text').innerText = 'Banka Transferi';
+    document.getElementById('modal-input-bankname').value = 'Banka Şubesi';
+    document.getElementById('modal-input-name2').value = req.name;
+    document.getElementById('modal-input-iban').value = req.iban;
+    document.getElementById('modal-input-amount2').value = `₺${req.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})}`;
+    
+    // Modal Durumunu Sıfırla
+    document.getElementById('dekont-upload').value = '';
+    document.getElementById('dekont-filename').innerText = 'Dosya seçilmedi';
+    
+    let btn = document.getElementById('modal-btn-approve');
+    btn.disabled = true;
+    btn.style.background = '#fff';
+    btn.style.color = '#f39c12';
+    btn.style.borderColor = '#f39c12';
+    btn.style.opacity = '0.7';
+    btn.style.cursor = 'not-allowed';
+    btn.innerText = 'Önce tüm belgeleri yükleyin';
+    
+    // Göster
+    document.getElementById('withdraw-modal-overlay').style.display = 'flex';
+}
+
+function closeWithdrawModal() {
+    document.getElementById('withdraw-modal-overlay').style.display = 'none';
+    currentWithdrawProcessingId = null;
+}
+
+function handleDekontSelect(event) {
+    let file = event.target.files[0];
+    if(file) {
+        document.getElementById('dekont-filename').innerText = file.name;
+        
+        // Butonu Aktif Et (Onayla'ya dönüştür)
+        let btn = document.getElementById('modal-btn-approve');
+        btn.disabled = false;
+        btn.style.background = '#02b875';
+        btn.style.color = '#fff';
+        btn.style.borderColor = '#02b875';
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.innerText = '✅ ONAYLA';
+    }
+}
+
+function confirmApproveWithdraw() {
+    if(!currentWithdrawProcessingId) return;
+    
+    let id = currentWithdrawProcessingId;
     let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
     let req = pendingWithdraws.find(req => req.id === id);
     if(req) {
@@ -296,7 +377,8 @@ function approveWithdraw(id) {
     pendingWithdraws = pendingWithdraws.filter(req => req.id !== id);
     localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
     
-    alert("Çekim talebi onaylandı ve tamamlananlara (silinerek) eklendi.");
+    closeWithdrawModal();
+    alert("Çekim talebi dekontlu olarak onaylandı ve havuzdan silindi.");
     syncFromLocal();
 }
 
@@ -446,7 +528,7 @@ setInterval(syncFromLocal, 1000);
 
 function initAdminPanel() {
     // Session kontrol
-    currentAdmin = JSON.parse(localStorage.getItem('tb_logged_admin') || 'null');
+    currentAdmin = JSON.parse(sessionStorage.getItem('tb_logged_admin') || 'null');
     if(!currentAdmin) {
         // Giriş yapılmamış
         document.getElementById('admin-login-overlay').style.display = 'flex';
@@ -503,7 +585,7 @@ function handleAdminLogin() {
     
     // Check Super Admin
     if(email === SUPER_ADMIN.email && pass === SUPER_ADMIN.pass) {
-        localStorage.setItem('tb_logged_admin', JSON.stringify(SUPER_ADMIN));
+        sessionStorage.setItem('tb_logged_admin', JSON.stringify(SUPER_ADMIN));
         location.reload();
         return;
     }
@@ -513,7 +595,7 @@ function handleAdminLogin() {
     let staffUser = staffList.find(s => s.email === email && s.pass === pass);
     
     if(staffUser) {
-        localStorage.setItem('tb_logged_admin', JSON.stringify(staffUser));
+        sessionStorage.setItem('tb_logged_admin', JSON.stringify(staffUser));
         location.reload();
         return;
     }
@@ -522,7 +604,7 @@ function handleAdminLogin() {
 }
 
 function logoutAdmin() {
-    localStorage.removeItem('tb_logged_admin');
+    sessionStorage.removeItem('tb_logged_admin');
     window.location.reload();
 }
 
@@ -550,7 +632,7 @@ function saveAdminSettings() {
             alert('Şifreniz başarıyla değiştirildi. Yeni girişlerinizde aktif olacaktır.');
         }
         localStorage.setItem('tb_staff', JSON.stringify(staffList));
-        localStorage.setItem('tb_logged_admin', JSON.stringify(currentAdmin));
+        sessionStorage.setItem('tb_logged_admin', JSON.stringify(currentAdmin));
         alert('Profiliniz güncellendi.');
         document.getElementById('admin-new-pass').value = '';
         syncFromLocal();
@@ -568,7 +650,7 @@ function verifyAndSet2FA() {
         staffList[idx].has2FA = true;
         currentAdmin.has2FA = true;
         localStorage.setItem('tb_staff', JSON.stringify(staffList));
-        localStorage.setItem('tb_logged_admin', JSON.stringify(currentAdmin));
+        sessionStorage.setItem('tb_logged_admin', JSON.stringify(currentAdmin));
         
         document.getElementById('admin-2fa-overlay').style.display = 'none';
         alert('2FA Güvenliğiniz başarıyla aktifleştirildi! Artık sistem işlemlerini gerçekleştirebilirsiniz.');
