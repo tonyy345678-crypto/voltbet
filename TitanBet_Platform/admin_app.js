@@ -304,11 +304,18 @@ function rejectDeposit() {
 function approveDeposit() {
     if (!pendingDeposit) return;
     
+    // Bank details
+    const bankInfo = activeBanks.find(b => b.name === pendingDeposit.bank);
+    const hesapSahibi = bankInfo ? bankInfo.owner : 'Sistem Bankası';
+    const ibanStr = bankInfo ? bankInfo.iban : '-';
+    
     document.getElementById('dep-modal-id').innerText = '#' + pendingDeposit.id;
     document.getElementById('dep-modal-name').innerText = pendingDeposit.userName || 'Bilinmiyor';
     document.getElementById('dep-modal-sBank').innerText = pendingDeposit.senderBank || 'Belirtilmedi';
     document.getElementById('dep-modal-bank').innerText = pendingDeposit.bank;
-    document.getElementById('dep-modal-amount').innerText = pendingDeposit.amount.toFixed(2) + ' ₺';
+    document.getElementById('dep-modal-owner').innerText = hesapSahibi;
+    document.getElementById('dep-modal-iban').innerText = ibanStr;
+    document.getElementById('dep-modal-amount').innerText = pendingDeposit.amount.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
     
     document.getElementById('deposit-modal-overlay').style.display = 'flex';
 }
