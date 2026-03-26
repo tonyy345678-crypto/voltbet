@@ -621,16 +621,43 @@ function rejectWithdraw(id) {
 function renderBanks() {
     const list = document.getElementById('banks-list');
     list.innerHTML = '';
+    
+    let depositHistory = JSON.parse(localStorage.getItem('tb_deposit_history') || '[]');
+    let todayStart = new Date();
+    todayStart.setHours(0,0,0,0);
+    
     activeBanks.forEach((bank, index) => {
-        let limText = bank.minLimit ? `<span style="border:1px solid #02b875; color:#02b875; font-size:10px; padding:2px 6px; border-radius:3px; margin-left:10px;">Min: ${bank.minLimit.toLocaleString('tr-TR')} ₺</span>` : '';
+        let minL = bank.minLimit || 10;
+        let maxL = bank.maxLimit || 1000000;
+        let limText = `<span style="border:1px solid #02b875; color:#02b875; font-size:10px; padding:2px 6px; border-radius:3px; margin-left:10px;">Min: ${minL.toLocaleString('tr-TR')} ₺ | Max: ${maxL.toLocaleString('tr-TR')} ₺</span>`;
+        
+        let todayDeposits = depositHistory.filter(req => {
+            if (req.bank !== bank.name || req.statusText !== 'Onaylandı') return false;
+            let d = new Date(req.processedDate);
+            return d.getTime() >= todayStart.getTime();
+        });
+        
+        let todayCount = todayDeposits.length;
+        let todayTotal = todayDeposits.reduce((acc, curr) => acc + curr.amount, 0);
+        
+        let statsHtml = `<div style="margin-top:10px; font-size:11px; color:#555; background:#f4f5f7; padding:6px 10px; border-radius:4px; border-left:3px solid #0056b3; display:flex; justify-content:space-between;">
+            <span>Bugün Onaylanan Yatırım: <b style="color:#0056b3;">${todayCount} İşlem</b></span>
+            <span>Toplam: <b style="color:#02b875;">${todayTotal.toLocaleString('tr-TR')} ₺</b></span>
+        </div>`;
+
         const item = document.createElement('div');
         item.className = 'bank-item';
+        item.style.flexDirection = 'column';
+        item.style.alignItems = 'stretch';
         item.innerHTML = `
-            <div class="info">
-                <div class="name" style="display:flex; align-items:center;">${bank.name} ${limText}</div>
-                <div class="iban">${bank.owner} | ${bank.iban}</div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div class="info">
+                    <div class="name" style="display:flex; align-items:center;">${bank.name} ${limText}</div>
+                    <div class="iban" style="margin-top:5px;">${bank.owner} | ${bank.iban}</div>
+                </div>
+                <button class="del-btn" onclick="removeBank(${index})" style="margin-left:15px;">🗑️</button>
             </div>
-            <button class="del-btn" onclick="removeBank(${index})">🗑️</button>
+            ${statsHtml}
         `;
         list.appendChild(item);
     });
@@ -641,19 +668,24 @@ function addNewBank() {
     const owner = document.getElementById('new-bank-owner').value;
     const iban = document.getElementById('new-bank-iban').value;
     const minLimitInput = document.getElementById('new-bank-minlimit').value;
+    const maxLimitInput = document.getElementById('new-bank-maxlimit').value;
 
     if (!name || !owner || !iban) { alert('Tüm alanları doldurun!'); return; }
     
     let limit = parseFloat(minLimitInput);
     if(isNaN(limit) || limit < 0) limit = 10;
+    
+    let maxLimit = parseFloat(maxLimitInput);
+    if(isNaN(maxLimit) || maxLimit < limit) maxLimit = 1000000;
 
-    activeBanks.push({ name, owner, iban, minLimit: limit });
+    activeBanks.push({ name, owner, iban, minLimit: limit, maxLimit: maxLimit });
     saveBanks();
     
     document.getElementById('new-bank-name').value = '';
     document.getElementById('new-bank-owner').value = '';
     document.getElementById('new-bank-iban').value = '';
     document.getElementById('new-bank-minlimit').value = '';
+    document.getElementById('new-bank-maxlimit').value = '';
 }
 
 function removeBank(index) {

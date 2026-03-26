@@ -225,8 +225,9 @@ function openDeposit() {
         activeBanks.forEach((bank, index) => {
             const opt = document.createElement('option');
             opt.value = index;
-            let limitTxt = bank.minLimit ? ` - Min: ${bank.minLimit.toLocaleString('tr-TR')} ₺` : '';
-            opt.innerText = bank.name + " (" + bank.owner + ")" + limitTxt;
+            let minL = bank.minLimit || 10;
+            let maxL = bank.maxLimit || 1000000;
+            opt.innerText = `${bank.name} (${bank.owner}) - Min: ${minL.toLocaleString('tr-TR')} ₺ | Max: ${maxL.toLocaleString('tr-TR')} ₺`;
             select.appendChild(opt);
         });
         
@@ -281,9 +282,15 @@ function submitDeposit() {
 
     const bank = activeBanks[bankIdx];
     const limit = bank.minLimit || 10;
+    const maxLimit = bank.maxLimit || 1000000;
     
     if (amt < limit) {
         alert(`Bu banka için minimum yatırım limiti ${limit.toLocaleString('tr-TR')} ₺'dir.`);
+        return;
+    }
+    
+    if (amt > maxLimit) {
+        alert(`Bu banka için maksimum yatırım limiti ${maxLimit.toLocaleString('tr-TR')} ₺'dir.`);
         return;
     }
 
