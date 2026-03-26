@@ -40,6 +40,25 @@ function syncFromLocal() {
     if(currentAdmin.role !== 'super') {
         dashDeps = dashDeps.filter(tx => tx.staffEmail === currentAdmin.email);
         dashWits = dashWits.filter(tx => tx.staffEmail === currentAdmin.email);
+    } else {
+        const staffSelect = document.getElementById('dash-staff-select');
+        if (staffSelect) {
+            staffSelect.style.display = 'block';
+            let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+            if (staffSelect.options.length !== staffList.length + 1) {
+                let currentVal = staffSelect.value;
+                let optionsHtml = '<option value="">-- Genel İstatistik --</option>';
+                staffList.forEach(s => {
+                    optionsHtml += `<option value="${s.email}">${s.name} (${s.email})</option>`;
+                });
+                staffSelect.innerHTML = optionsHtml;
+                staffSelect.value = currentVal;
+            }
+            if (staffSelect.value) {
+                dashDeps = dashDeps.filter(tx => tx.staffEmail === staffSelect.value);
+                dashWits = dashWits.filter(tx => tx.staffEmail === staffSelect.value);
+            }
+        }
     }
     
     let sumDep = dashDeps.reduce((s, x) => s + x.amount, 0);
@@ -991,6 +1010,8 @@ function renderStaffTable() {
                 <td style="padding:10px; font-weight:bold; color:${net >= 0 ? '#1fcc5a' : '#e11d48'};">${net.toFixed(2)} ₺</td>
                 <td style="padding:10px;">${faStatus}</td>
                 <td style="padding:10px;">
+                    <button onclick="adjustStaffBalance('${s.email}', true)" style="background:#1fcc5a; border:none; padding:5px 10px; color:#000; font-weight:bold; border-radius:3px; cursor:pointer; font-size:11px; margin-right:5px;">Ekle (+)</button>
+                    <button onclick="adjustStaffBalance('${s.email}', false)" style="background:#ff9f00; border:none; padding:5px 10px; color:#000; font-weight:bold; border-radius:3px; cursor:pointer; font-size:11px; margin-right:5px;">Eksilt (-)</button>
                     <button onclick="deleteStaff('${s.email}')" style="background:#e11d48; border:none; padding:5px 10px; color:#fff; border-radius:3px; cursor:pointer; font-size:11px;">Sil</button>
                 </td>
             </tr>
@@ -998,6 +1019,35 @@ function renderStaffTable() {
     });
     tbody.innerHTML = html;
 }
+
+window.adjustStaffBalance = function(email, isAdd) {
+    let amountStr = prompt(isAdd ? 'Eklenecek tutarı girin (₺):' : 'Eksiltilecek tutarı girin (₺):');
+    if(!amountStr) return;
+    let amount = parseFloat(amountStr);
+    if(isNaN(amount) || amount <= 0) return alert('Geçerli bir tutar giriniz.');
+    
+    let logs = JSON.parse(localStorage.getItem('tb_tx_logs') || '[]');
+    let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+    let staffUser = staffList.find(s => s.email === email);
+    if(!staffUser) return alert('Personel bulunamadı.');
+    
+    logs.push({
+        id: 'SYS' + Date.now(),
+        userId: 'system_adjust',
+        userEmail: 'Yönetim Merkezi',
+        amount: amount,
+        type: isAdd ? 'deposit' : 'withdraw',
+        bank: 'Sistem Kasa İşlemi',
+        senderName: 'Süper Admin',
+        status: 'approved',
+        date: new Date().toLocaleString('tr-TR'),
+        timestamp: Date.now(),
+        staffEmail: email
+    });
+    localStorage.setItem('tb_tx_logs', JSON.stringify(logs));
+    syncFromLocal();
+    alert(staffUser.name + ' personeline ' + amount + ' ₺ bakiye ' + (isAdd ? 'eklendi' : 'silindi') + '!');
+};
 
 // BAŞLAT
 initAdminPanel();
