@@ -469,10 +469,18 @@
                         Lütfen önce bir banka seçin.
                     </div>
                     <div class="input-group">
-                        <label>Ödeme Yaptığınız Banka:</label>
+                        <label>Ödeme Yaptığınız Banka (Bizim Hesabımız):</label>
                         <select id="deposit-bank" onchange="updateBankInfo()">
                             <option value="">Seçiniz...</option>
                         </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Gönderim Yaptığınız Banka (Kendi Bankanız):</label>
+                        <input type="text" id="deposit-sender-bank" placeholder="Örn: Garanti Bankası">
+                    </div>
+                    <div class="input-group">
+                        <label>Gönderici Ad Soyad:</label>
+                        <input type="text" id="deposit-sender-name" placeholder="Banka hesabındaki adınız soyadınız">
                     </div>
                     <div class="input-group">
                         <label>Yatırılan Tutar (₺):</label>

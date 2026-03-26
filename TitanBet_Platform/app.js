@@ -268,10 +268,14 @@ function closeDeposit() {
 function submitDeposit() {
     const amt = parseFloat(document.getElementById('deposit-amount').value);
     const bankIdx = document.getElementById('deposit-bank').value;
+    const senderBank = document.getElementById('deposit-sender-bank').value.trim();
+    const senderName = document.getElementById('deposit-sender-name').value.trim();
 
     if (!amt || amt < 10) { alert('Lütfen geçerli bir tutar girin (Min 10 ₺)'); return; }
     if (activeBanks.length === 0) { alert('Şu anda aktif bir IBAN bulunmamaktadır!'); return; }
-    if (bankIdx === "") { alert('Lütfen bir banka seçin!'); return; }
+    if (bankIdx === "") { alert('Lütfen bir hesabımızı seçin!'); return; }
+    if (!senderBank) { alert('Lütfen parayı gönderdiğiniz (kendi) bankanızı yazın!'); return; }
+    if (!senderName) { alert('Lütfen gönderici Ad Soyad bilgisini yazın!'); return; }
     if (!currentUser) { alert('Lütfen önce giriş yapın!'); return; }
 
     const bank = activeBanks[bankIdx];
@@ -279,7 +283,8 @@ function submitDeposit() {
         amount: amt, 
         bank: bank.name, 
         userEmail: currentUser.email,
-        userName: currentUser.name,
+        userName: senderName, // Override registered name with provided sender name
+        senderBank: senderBank, // New field for Admin to see
         id: Math.floor(Math.random() * 9000000) + 1000000 
     };
     

@@ -240,18 +240,19 @@ function renderRequests() {
     // Güvenlik: Eğer eski data ise userName undefined olabilir
     const uName = pendingDeposit.userName || 'Bilinmiyor';
     const uEmail = pendingDeposit.userEmail || '-';
+    const sBank = pendingDeposit.senderBank || 'Belirtilmedi';
 
     list.innerHTML = `
         <div class="req-row">
             <div class="info">
                 <div class="amt">${pendingDeposit.amount.toFixed(2)} ₺</div>
-                <div style="font-size:12px; color:#666;">
-                    ${pendingDeposit.bank} | ID: #${pendingDeposit.id}<br>
-                    <span style="color:#1fcc5a; font-weight:bold;">${uName}</span> (${uEmail})
-                </div>
+                <div style="font-size:12px; color:#666; margin-top:5px; line-height:1.4;">
+                    Bizim Hesap: <strong>${pendingDeposit.bank}</strong> (ID: #${pendingDeposit.id})<br>
+                    Gönderen Banka: <strong style="color:#eab308;">${sBank}</strong><br>
+                    Gönderen Kişi: <span style="color:#1fcc5a; font-weight:bold;">${uName}</span> (${uEmail})
                 </div>
             </div>
-            <div class="actions" style="display:flex; gap:10px;">
+            <div class="actions" style="display:flex; gap:10px; align-items:center;">
                 <button class="approve-btn" onclick="approveDeposit()">ONAYLA</button>
                 <button class="reject-btn" onclick="rejectDeposit()" style="background:#e11d48; color:#fff; border:none; padding:8px 15px; border-radius:5px; font-weight:700; cursor:pointer;">REDDET</button>
             </div>
