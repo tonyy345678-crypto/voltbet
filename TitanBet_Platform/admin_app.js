@@ -9,6 +9,7 @@ let currentChatEmail = null;
 let currentAdmin = null;
 let tb_staff = [];
 let tb_tx_logs = []; // İşlem logları (kim ne kadar onayladı)
+let dashboardChart = null; // Chart.js instance
 
 // SÜPER ADMIN SABİT BİLGİSİ
 const SUPER_ADMIN = { email: 'admin@volt.bet', pass: '123456', role: 'super', name: 'Kurucu Müdür' };
@@ -28,27 +29,56 @@ function syncFromLocal() {
     document.getElementById('footer-admin-role').innerText = currentAdmin.role === 'super' ? '(Süper Admin)' : '(Personel)';
     
     // KASA VE İSTATİSTİKLER (Role Göre)
+    let dashDeps = tb_tx_logs.filter(tx => tx.type === 'deposit');
+    let dashWits = tb_tx_logs.filter(tx => tx.type === 'withdraw');
+    
+    if(currentAdmin.role !== 'super') {
+        dashDeps = dashDeps.filter(tx => tx.staffEmail === currentAdmin.email);
+        dashWits = dashWits.filter(tx => tx.staffEmail === currentAdmin.email);
+    }
+    
+    let sumDep = dashDeps.reduce((s, x) => s + x.amount, 0);
+    let sumWit = dashWits.reduce((s, x) => s + x.amount, 0);
+    let net = sumDep - sumWit;
+    
+    let avgDep = dashDeps.length ? (sumDep / dashDeps.length) : 0;
+    let avgWit = dashWits.length ? (sumWit / dashWits.length) : 0;
+    
+    let today = new Date().toLocaleDateString('tr-TR');
+    
+    // Update DOM Dashboard Cards
+    ['dash-date-1','dash-date-2','dash-date-4'].forEach(id => {
+        if(document.getElementById(id)) document.getElementById(id).innerText = today;
+    });
+    
+    if(document.getElementById('dash-val-dep')) {
+        document.getElementById('dash-val-dep').innerText = sumDep.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+        document.getElementById('dash-val-dep-man').innerText = sumDep.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+        document.getElementById('dash-val-wit').innerText = sumWit.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+        document.getElementById('dash-val-wit-man').innerText = sumWit.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+        document.getElementById('dash-val-avg-dep').innerText = avgDep.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+        document.getElementById('dash-val-avg-wit').innerText = avgWit.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+        
+        document.getElementById('dash-val-net').innerText = net.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+        document.getElementById('dash-net-text').innerText = net >= 0 ? "VoltBet Alacaklıdır" : "VoltBet Borçludur";
+        document.getElementById('dash-val-net').style.color = net >= 0 ? "#0056b3" : "#e11d48";
+        
+        // Render Chart
+        renderDashboardChart(dashDeps, dashWits);
+    }
+
     if(currentAdmin.role === 'super') {
         let totalCash = 0;
         usersList.forEach(u => totalCash += u.balance);
-        document.getElementById('admin-total-balance').innerText = totalCash.toFixed(2) + ' ₺';
+        if(document.getElementById('admin-total-balance')) document.getElementById('admin-total-balance').innerText = totalCash.toFixed(2) + ' ₺';
         
         renderStaffTable();
     } else {
-        // Personel kendi istatistiklerini görür
-        let myDeposits = tb_tx_logs.filter(tx => tx.staffEmail === currentAdmin.email && tx.type === 'deposit').reduce((sum, tx) => sum + tx.amount, 0);
-        let myWithdraws = tb_tx_logs.filter(tx => tx.staffEmail === currentAdmin.email && tx.type === 'withdraw').reduce((sum, tx) => sum + tx.amount, 0);
-        let myKasa = myDeposits - myWithdraws;
-        
-        document.getElementById('staff-my-deposits').innerText = myDeposits.toFixed(2) + ' ₺';
-        document.getElementById('staff-my-withdraws').innerText = myWithdraws.toFixed(2) + ' ₺';
-        document.getElementById('staff-my-kasa').innerText = myKasa.toFixed(2) + ' ₺';
-        
         // 2FA KONTROLÜ
         if(!currentAdmin.has2FA) {
-            document.getElementById('admin-2fa-overlay').style.display = 'flex';
+            if(document.getElementById('admin-2fa-overlay')) document.getElementById('admin-2fa-overlay').style.display = 'flex';
         } else {
-            document.getElementById('admin-2fa-overlay').style.display = 'none';
+            if(document.getElementById('admin-2fa-overlay')) document.getElementById('admin-2fa-overlay').style.display = 'none';
         }
     }
     
@@ -74,11 +104,123 @@ function showTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     
-    document.getElementById('tab-' + tabId).classList.add('active');
+    if(document.getElementById('tab-' + tabId)) document.getElementById('tab-' + tabId).classList.add('active');
+    
     // Mark nav btn active
     document.querySelectorAll('.nav-btn').forEach(btn => {
         if(btn.innerText.toLowerCase().includes(tabId)) btn.classList.add('active');
     });
+}
+
+// ── CHART.JS RENDERER ────────────────────────────
+function renderDashboardChart(deps, wits) {
+    const ctx = document.getElementById('financeChart');
+    if(!ctx) return;
+    
+    // Generate last 7 days labels
+    const labels = [];
+    const depData = [];
+    const witData = [];
+    
+    for(let i=6; i>=0; i--) {
+        let d = new Date();
+        d.setDate(d.getDate() - i);
+        let dateStr = d.toLocaleDateString('tr-TR', { day:'2-digit', month:'short' });
+        labels.push(dateStr);
+        
+        // Start of day
+        d.setHours(0,0,0,0);
+        let start = d.getTime();
+        let end = start + 86400000;
+        
+        let dayDeps = deps.filter(x => x.timestamp >= start && x.timestamp < end).reduce((s,x)=>s+x.amount, 0);
+        let dayWits = wits.filter(x => x.timestamp >= start && x.timestamp < end).reduce((s,x)=>s+x.amount, 0);
+        
+        depData.push(dayDeps);
+        witData.push(dayWits);
+    }
+    
+    if(dashboardChart) {
+        dashboardChart.data.labels = labels;
+        dashboardChart.data.datasets[0].data = depData;
+        dashboardChart.data.datasets[1].data = witData;
+        dashboardChart.update('none'); // Update without full animation for performance
+    } else {
+        dashboardChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Toplam Yatırım',
+                        data: depData,
+                        borderColor: '#02b875',
+                        backgroundColor: 'rgba(2,184,117,0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#02b875',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Toplam Çekim',
+                        data: witData,
+                        borderColor: '#e11d48',
+                        backgroundColor: 'rgba(225,29,72,0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#e11d48',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 800, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(10,14,20,0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#1e2a38',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) { label += context.parsed.y.toLocaleString('tr-TR') + ' ₺'; }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f0f0f0', drawBorder: false },
+                        ticks: {
+                            callback: function(value) { return value.toLocaleString('tr-TR') + ' ₺'; },
+                            font: { size: 11, family: 'sans-serif' }
+                        }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false },
+                        ticks: { font: { size: 11, family: 'sans-serif' } }
+                    }
+                },
+                interaction: { mode: 'nearest', axis: 'x', intersect: false }
+            }
+        });
+    }
 }
 
 function renderRequests() {
@@ -543,34 +685,27 @@ function initAdminPanel() {
     // ROL BAZLI ARAYÜZ AYARLARI
     if(currentAdmin.role === 'super') {
         // Super Admin
-        document.getElementById('nav-staff').style.display = 'block';
-        document.getElementById('nav-users').style.display = 'block';
-        document.getElementById('nav-deposits').style.display = 'none';
-        document.getElementById('nav-withdraws').style.display = 'none';
-        document.getElementById('nav-banks').style.display = 'none';
-        document.getElementById('nav-support').style.display = 'none';
+        if(document.getElementById('nav-staff')) document.getElementById('nav-staff').style.display = 'block';
+        if(document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'block';
+        if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'none';
+        if(document.getElementById('nav-withdraws')) document.getElementById('nav-withdraws').style.display = 'none';
+        if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'none';
+        if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'none';
         
-        document.getElementById('top-kasa-widget').style.display = 'flex';
-        document.getElementById('dash-super-stats').style.display = 'flex';
-        document.getElementById('dash-staff-stats').style.display = 'none';
-        
-        document.getElementById('admin-display-name-input').value = currentAdmin.name;
+        if(document.getElementById('top-kasa-widget')) document.getElementById('top-kasa-widget').style.display = 'flex';
+        if(document.getElementById('admin-display-name-input')) document.getElementById('admin-display-name-input').value = currentAdmin.name;
     } else {
         // Personel (Sub)
-        document.getElementById('nav-staff').style.display = 'none';
-        document.getElementById('nav-users').style.display = 'none';
-        document.getElementById('nav-deposits').style.display = 'block';
-        document.getElementById('nav-withdraws').style.display = 'block';
-        document.getElementById('nav-banks').style.display = 'block';
-        document.getElementById('nav-support').style.display = 'none'; // Destek ayrı kurulacak dediniz.
-        document.getElementById('nav-settings').style.display = 'none'; // Sadece 4 yetki istendi
+        if(document.getElementById('nav-staff')) document.getElementById('nav-staff').style.display = 'none';
+        if(document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'none';
+        if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'block';
+        if(document.getElementById('nav-withdraws')) document.getElementById('nav-withdraws').style.display = 'block';
+        if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'block';
+        if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'none'; // Destek ayrı kurulacak dediniz.
+        if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = 'none'; // Sadece 4 yetki istendi
         
-        document.getElementById('top-kasa-widget').style.display = 'none';
-        document.getElementById('dash-super-stats').style.display = 'none';
-        document.getElementById('dash-staff-stats').style.display = 'flex';
-        
-        document.getElementById('dash-welcome-text').innerText = 'Hoşgeldin, ' + currentAdmin.name;
-        document.getElementById('admin-display-name-input').value = currentAdmin.name;
+        if(document.getElementById('top-kasa-widget')) document.getElementById('top-kasa-widget').style.display = 'none';
+        if(document.getElementById('admin-display-name-input')) document.getElementById('admin-display-name-input').value = currentAdmin.name;
     }
 
     syncFromLocal();
