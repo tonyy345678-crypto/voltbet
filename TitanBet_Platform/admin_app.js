@@ -320,7 +320,7 @@ function approveDeposit() {
     document.getElementById('dep-modal-bank').innerText = pendingDeposit.bank;
     document.getElementById('dep-modal-owner').innerText = hesapSahibi;
     document.getElementById('dep-modal-iban').innerText = ibanStr;
-    document.getElementById('dep-modal-amount').innerText = pendingDeposit.amount.toLocaleString('tr-TR', {minimumFractionDigits:2}) + ' ₺';
+    document.getElementById('dep-modal-amount-input').value = pendingDeposit.amount;
     
     document.getElementById('deposit-modal-overlay').style.display = 'flex';
 }
@@ -339,6 +339,15 @@ function confirmApproveDeposit() {
             syncFromLocal();
             return;
         }
+
+        let finalAmount = parseFloat(document.getElementById('dep-modal-amount-input').value);
+        if (isNaN(finalAmount) || finalAmount <= 0) {
+            alert('Lütfen geçerli bir onay tutarı girin!');
+            return;
+        }
+
+        // Tutar düzenlenmişse, asıl objeyi güncelliyoruz (Geçmişe de bu tutarla yansıyacak)
+        pendingDeposit.amount = finalAmount;
 
         // Find user and add balance
         let user = usersList.find(u => u.email === pendingDeposit.userEmail);
