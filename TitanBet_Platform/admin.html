@@ -143,12 +143,35 @@
                 </div>
             </section>
 
-            <section id="tab-deposits" class="tab-content">
-                <div class="section-card">
-                    <h3>Bekleyen Yatırım Talepleri</h3>
-                    <div id="requests-list" class="requests-table-container">
-                        <!-- Requests will be injected here -->
-                        <div class="no-data">Bekleyen yatırım talebi bulunamadı.</div>
+            <section id="tab-deposits" class="tab-content" style="background:#eff3f8; padding:0; min-height:100vh;">
+                <div style="background:#fff; border-bottom:1px solid #ddd; padding:15px 25px; display:flex; justify-content:space-between; align-items:center;">
+                    <h2 style="color:#2c3e50; margin:0; font-size:18px; font-weight:600;">Bekleyen Yatırım Talepleri</h2>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button style="background:#fff; border:1px solid #02b875; padding:5px 15px; border-radius:4px; color:#02b875; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:5px;" onclick="syncFromLocal()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-8.47l5.67-5.67"/></svg> Yenile
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="padding:20px;">
+                    <div style="background:#fff; border:1px solid #e1e5eb; border-radius:6px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%; border-collapse:collapse; font-size:13px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align:center;">
+                                <thead>
+                                    <tr style="border-bottom:1px solid #e1e5eb; color:#6b778c;">
+                                        <th style="padding:12px 10px; font-weight:600;">ID <span style="font-size:10px; color:#aaa;">▼</span></th>
+                                        <th style="padding:12px 10px; font-weight:600;">Gönderen Kişi</th>
+                                        <th style="padding:12px 10px; font-weight:600;">Gönderen Banka</th>
+                                        <th style="padding:12px 10px; font-weight:600;">Bizim Hesap</th>
+                                        <th style="padding:12px 10px; font-weight:600;">Tutar (₺)</th>
+                                        <th style="padding:12px 10px; font-weight:600;">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="requests-list" style="color:#172b4d;">
+                                    <tr><td colspan="6" style="padding:20px; color:#888;">Bekleyen yatırım talebi bulunamadı.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -353,6 +376,51 @@
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button onclick="createNewStaff()" style="flex:1; background:#1fcc5a; color:#000; padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Oluştur</button>
                 <button onclick="document.getElementById('add-staff-modal').style.display='none'" style="flex:1; background:#e11d48; color:#fff; padding:10px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JETPAY DEPOSIT APPROVAL MODAL -->
+    <div id="deposit-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center; backdrop-filter:blur(2px);">
+        <div style="background:#fff; border-radius:8px; width:600px; max-width:95%; box-shadow:0 10px 40px rgba(0,0,0,0.2); font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display:flex; flex-direction:column;">
+            
+            <div style="padding:15px 20px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:#333; font-size:18px;">Yatırım Onay Penceresi</h3>
+                <span onclick="closeDepositModal()" style="cursor:pointer; color:#888; font-size:20px; font-weight:bold;">&times;</span>
+            </div>
+
+            <div style="padding:20px;">
+                <div style="background:#f8fbff; border:1px solid #1a73e8; border-radius:6px; padding:15px; display:flex; flex-direction:column; gap:10px; font-size:14px; color:#333;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:#666;">Talep ID:</span>
+                        <strong id="dep-modal-id">#000</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:#666;">Gönderici Ad Soyad:</span>
+                        <strong id="dep-modal-name" style="color:#1fcc5a;">-</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:#666;">Gönderici Bankası:</span>
+                        <strong id="dep-modal-sBank" style="color:#eab308;">-</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; border-top:1px solid #ccc; padding-top:10px; margin-top:5px;">
+                        <span style="color:#666;">Yatırılan Bizim Hesap:</span>
+                        <strong id="dep-modal-bank">-</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:18px;">
+                        <span>Yatırım Tutarı:</span>
+                        <strong id="dep-modal-amount" style="color:#02b875;">0.00 ₺</strong>
+                    </div>
+                </div>
+
+                <div style="background:#fff3cd; border:1px solid #ffeeba; border-radius:6px; padding:10px; margin-top:15px; font-size:12px; color:#856404; text-align:center;">
+                    Lütfen banka ekstrenizi kontrol ederek bu tutarın ve kişinin doğru hesaba gönderim yaptığını onaylayın. Hatalı onaylamalardan sorumlu tutulabilirsiniz.
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <button onclick="closeDepositModal()" style="background:#fff; border:1px solid #ddd; color:#555; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer;">VAZGEÇ</button>
+                    <button onclick="confirmApproveDeposit()" style="background:#02b875; border:none; color:#fff; padding:10px 20px; border-radius:4px; font-weight:bold; cursor:pointer; box-shadow:0 2px 4px rgba(2,184,117,0.3);">🟢 ONAYLA ve BAKİYE EKLE</button>
+                </div>
             </div>
         </div>
     </div>
