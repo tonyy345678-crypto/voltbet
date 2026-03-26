@@ -226,43 +226,73 @@ function renderDashboardChart(deps, wits) {
 function renderRequests() {
     const list = document.getElementById('requests-list');
     const badge = document.getElementById('deposit-count-badge');
+    const totalCountSpan = document.getElementById('deposit-total-count');
+    
+    if (totalCountSpan) totalCountSpan.innerText = pendingDeposit ? '1' : '0';
     
     if (!pendingDeposit) {
-        list.innerHTML = '<div class="no-data">Bekleyen yatırım talebi bulunamadı.</div>';
-        badge.innerText = '0';
-        badge.style.display = 'none';
+        list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Bekleyen yatırım talebi bulunamadı.</td></tr>';
+        if(badge) { badge.innerText = '0'; badge.style.display = 'none'; }
         return;
     }
 
-    badge.innerText = '1';
-    badge.style.display = 'block';
+    if(badge) { badge.innerText = '1'; badge.style.display = 'block'; }
     
-    // Güvenlik: Eğer eski data ise userName undefined olabilir
     const uName = pendingDeposit.userName || 'Bilinmiyor';
     const uEmail = pendingDeposit.userEmail || '-';
-    const sBank = pendingDeposit.senderBank || 'Belirtilmedi';
+    // Kullanıcı adını mailden türetelim (örn: ali@mail.com -> ali)
+    const username = uEmail.includes('@') ? uEmail.split('@')[0] : uEmail;
+    
+    // Bank details
+    const bankInfo = activeBanks.find(b => b.name === pendingDeposit.bank);
+    const hesapSahibi = bankInfo ? bankInfo.owner : 'VoltBet VIP';
+    const ibanStr = bankInfo ? bankInfo.iban : '-';
+
+    // format date as DD.MM.YYYY HH:MM
+    const today = new Date();
+    const dDate = today.toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' + today.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
 
     list.innerHTML = `
-        <div class="req-row">
-            <div class="info">
-                <div class="amt">${pendingDeposit.amount.toFixed(2)} ₺</div>
-                <div style="font-size:12px; color:#666; margin-top:5px; line-height:1.4;">
-                    Bizim Hesap: <strong>${pendingDeposit.bank}</strong> (ID: #${pendingDeposit.id})<br>
-                    Gönderen Banka: <strong style="color:#eab308;">${sBank}</strong><br>
-                    Gönderen Kişi: <span style="color:#1fcc5a; font-weight:bold;">${uName}</span> (${uEmail})
+        <tr style="border-bottom:1px solid #e1e5eb; transition:background 0.2s; cursor:default;" onmouseover="this.style.background='#f4f5f7'" onmouseout="this.style.background='transparent'">
+            <td style="padding:15px 10px; color:#172b4d;">
+                <div style="display:flex; align-items:center; gap:10px; justify-content:center;">
+                    <span style="color:#aaa; font-size:10px;">▶</span> ${pendingDeposit.id}
                 </div>
-            </div>
-            <div class="actions" style="display:flex; gap:10px; align-items:center;">
-                <button class="approve-btn" onclick="approveDeposit()">ONAYLA</button>
-                <button class="reject-btn" onclick="rejectDeposit()" style="background:#e11d48; color:#fff; border:none; padding:8px 15px; border-radius:5px; font-weight:700; cursor:pointer;">REDDET</button>
-            </div>
-        </div>
+            </td>
+            <td style="padding:15px 10px; color:#172b4d;">${hesapSahibi}</td>
+            <td style="padding:15px 10px; color:#172b4d;">${pendingDeposit.bank}</td>
+            <td style="padding:15px 10px; color:#6b778c;">${ibanStr}</td>
+            <td style="padding:15px 10px;">
+                <div style="border:1px solid #e11d48; color:#e11d48; padding:4px 8px; border-radius:3px; font-weight:bold; font-size:11px; display:inline-block; text-transform:uppercase;">
+                    ${uName}
+                </div>
+            </td>
+            <td style="padding:15px 10px;">
+                <div style="border:1px solid #02b875; color:#02b875; padding:4px 8px; border-radius:3px; font-weight:bold; font-size:12px; display:inline-block;">
+                    ${pendingDeposit.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})} ₺
+                </div>
+            </td>
+            <td style="padding:15px 10px; color:#172b4d;">${username}</td>
+            <td style="padding:15px 10px; color:#172b4d; font-size:12px;">
+                ${dDate} <span style="border:1px solid #e11d48; color:#e11d48; padding:2px 5px; border-radius:3px; font-size:10px; margin-left:5px;">0</span>
+            </td>
+            <td style="padding:15px 10px;">
+                <div style="display:flex; gap:5px; justify-content:center;">
+                    <button onclick="approveDeposit()" style="background:#fff; border:1px solid #02b875; color:#02b875; padding:6px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#02b875'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#02b875';">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+                    </button>
+                    <button onclick="rejectDeposit()" style="background:#fff; border:1px solid #e11d48; color:#e11d48; padding:6px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#e11d48'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#e11d48';">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                    </button>
+                </div>
+            </td>
+        </tr>
     `;
 }
 
 function rejectDeposit() {
     if (pendingDeposit) {
-        if(confirm("Talebi reddetmek istediğinize emin misiniz? Bakiye eklenmeyecek.")) {
+        if(confirm("Talebi tamamen reddetmek ve havuzdan silmek istediğinize emin misiniz? Bakiye eklenmeyecek.")) {
             localStorage.setItem('tb_pending_deposit', 'null');
             alert("Yatırım talebi reddedildi ve silindi.");
             syncFromLocal();
@@ -270,11 +300,30 @@ function rejectDeposit() {
     }
 }
 
+// Opens the Modal
 function approveDeposit() {
+    if (!pendingDeposit) return;
+    
+    document.getElementById('dep-modal-id').innerText = '#' + pendingDeposit.id;
+    document.getElementById('dep-modal-name').innerText = pendingDeposit.userName || 'Bilinmiyor';
+    document.getElementById('dep-modal-sBank').innerText = pendingDeposit.senderBank || 'Belirtilmedi';
+    document.getElementById('dep-modal-bank').innerText = pendingDeposit.bank;
+    document.getElementById('dep-modal-amount').innerText = pendingDeposit.amount.toFixed(2) + ' ₺';
+    
+    document.getElementById('deposit-modal-overlay').style.display = 'flex';
+}
+
+function closeDepositModal() {
+    document.getElementById('deposit-modal-overlay').style.display = 'none';
+}
+
+// Actually processes the deposit inside the modal
+function confirmApproveDeposit() {
     if (pendingDeposit) {
         if (!pendingDeposit.userEmail) {
             alert('Bu eski/hatalı bir talep, e-posta eksik!');
             localStorage.setItem('tb_pending_deposit', 'null');
+            closeDepositModal();
             syncFromLocal();
             return;
         }
@@ -309,6 +358,7 @@ function approveDeposit() {
         }
 
         localStorage.setItem('tb_pending_deposit', 'null');
+        closeDepositModal();
         syncFromLocal();
     }
 }

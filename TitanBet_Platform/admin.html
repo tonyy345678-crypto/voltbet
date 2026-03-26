@@ -145,8 +145,12 @@
 
             <section id="tab-deposits" class="tab-content" style="background:#eff3f8; padding:0; min-height:100vh;">
                 <div style="background:#fff; border-bottom:1px solid #ddd; padding:15px 25px; display:flex; justify-content:space-between; align-items:center;">
-                    <h2 style="color:#2c3e50; margin:0; font-size:18px; font-weight:600;">Bekleyen Yatırım Talepleri</h2>
+                    <h2 style="color:#2c3e50; margin:0; font-size:18px; font-weight:600;">Havale Bekleyen Yatırım Talepleri</h2>
                     <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:13px; color:#555; font-weight:500;">Oto Yenile</span>
+                        <div style="width:34px; height:20px; background:#0056b3; border-radius:10px; position:relative; cursor:pointer;">
+                            <div style="width:16px; height:16px; background:#fff; border-radius:50%; position:absolute; top:2px; right:2px; box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>
+                        </div>
                         <button style="background:#fff; border:1px solid #02b875; padding:5px 15px; border-radius:4px; color:#02b875; font-weight:600; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:5px;" onclick="syncFromLocal()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-8.47l5.67-5.67"/></svg> Yenile
                         </button>
@@ -155,22 +159,66 @@
                 
                 <div style="padding:20px;">
                     <div style="background:#fff; border:1px solid #e1e5eb; border-radius:6px; padding:15px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <div style="margin-bottom:15px; display:flex;">
+                            <button style="background:#fff; border:1px solid #e1e5eb; padding:8px 15px; font-size:12px; color:#555; border-radius:4px; display:flex; gap:5px; align-items:center;">
+                                8 columns showing <span style="font-size:8px;">▼</span>
+                            </button>
+                        </div>
                         <div style="overflow-x:auto;">
                             <table style="width:100%; border-collapse:collapse; font-size:13px; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; text-align:center;">
                                 <thead>
                                     <tr style="border-bottom:1px solid #e1e5eb; color:#6b778c;">
-                                        <th style="padding:12px 10px; font-weight:600;">ID <span style="font-size:10px; color:#aaa;">▼</span></th>
-                                        <th style="padding:12px 10px; font-weight:600;">Gönderen Kişi</th>
-                                        <th style="padding:12px 10px; font-weight:600;">Gönderen Banka</th>
-                                        <th style="padding:12px 10px; font-weight:600;">Bizim Hesap</th>
-                                        <th style="padding:12px 10px; font-weight:600;">Tutar (₺)</th>
+                                        <th style="padding:12px 10px; font-weight:600; cursor:pointer;">ID <span style="font-size:10px; color:#aaa;">▼</span></th>
+                                        <th style="padding:12px 10px; font-weight:600;">Hesap Sahibi</th>
+                                        <th style="padding:12px 10px; font-weight:600;">Banka</th>
+                                        <th style="padding:12px 10px; font-weight:600;">IBAN</th>
+                                        <th style="padding:12px 10px; font-weight:600;">Gönderici Adı</th>
+                                        <th style="padding:12px 10px; font-weight:600;">Talep Tutarı</th>
+                                        <th style="padding:12px 10px; font-weight:600;">Kullanıcı Adı</th>
+                                        <th style="padding:12px 10px; font-weight:600;">Talep Tarihi</th>
                                         <th style="padding:12px 10px; font-weight:600;">İşlemler</th>
+                                    </tr>
+                                    <tr style="border-bottom:1px solid #e1e5eb; background:#fbfdfc;">
+                                        <th style="padding:8px 5px;"><input type="text" style="width:100%; padding:6px; border:1px solid #dfe1e6; border-radius:3px; box-sizing:border-box;"></th>
+                                        <th style="padding:8px 5px;"><input type="text" style="width:100%; padding:6px; border:1px solid #dfe1e6; border-radius:3px; box-sizing:border-box;"></th>
+                                        <th style="padding:8px 5px;">
+                                            <button style="background:#eef1F4; border:1px solid #dfe1e6; padding:5px 10px; border-radius:3px; color:#6b778c; font-size:12px;">Banka</button>
+                                        </th>
+                                        <th style="padding:8px 5px;"><input type="text" style="width:100%; padding:6px; border:1px solid #dfe1e6; border-radius:3px; box-sizing:border-box;"></th>
+                                        <th style="padding:8px 5px;"><input type="text" style="width:100%; padding:6px; border:1px solid #dfe1e6; border-radius:3px; box-sizing:border-box;"></th>
+                                        <th style="padding:8px 5px;">
+                                            <div style="display:flex; gap:5px;">
+                                                <button style="background:#eef1F4; border:1px solid #dfe1e6; padding:6px; border-radius:3px; color:#6b778c;">=</button>
+                                                <input type="text" style="width:100%; padding:6px; border:1px solid #dfe1e6; border-radius:3px; box-sizing:border-box;">
+                                            </div>
+                                        </th>
+                                        <th style="padding:8px 5px;"><input type="text" style="width:100%; padding:6px; border:1px solid #dfe1e6; border-radius:3px; box-sizing:border-box;"></th>
+                                        <th style="padding:8px 5px;">
+                                            <div style="display:flex; gap:5px;">
+                                                <input type="text" placeholder="📅" style="width:48%; padding:6px; border:1px solid #dfe1e6; border-radius:3px; text-align:center; box-sizing:border-box;">
+                                                <input type="text" placeholder="📅" style="width:48%; padding:6px; border:1px solid #dfe1e6; border-radius:3px; text-align:center; box-sizing:border-box;">
+                                            </div>
+                                        </th>
+                                        <th style="padding:8px 5px;"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="requests-list" style="color:#172b4d;">
-                                    <tr><td colspan="6" style="padding:20px; color:#888;">Bekleyen yatırım talebi bulunamadı.</td></tr>
+                                    <tr><td colspan="9" style="padding:20px; color:#888;">Bekleyen yatırım talebi bulunamadı.</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; font-size:13px; color:#6b778c;">
+                            <div>1 sayfadan 1. gösteriliyor (Toplam <span id="deposit-total-count">0</span> kayıt)</div>
+                            <div style="display:flex; gap:5px; align-items:center;">
+                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">I&lt;</button>
+                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&lt;</button>
+                                <button style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
+                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;</button>
+                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;I</button>
+                                <select style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none;"><option>100</option></select>
+                                <span style="margin-left:5px;">items per page</span>
+                            </div>
                         </div>
                     </div>
                 </div>
