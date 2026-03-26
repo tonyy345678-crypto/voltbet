@@ -28,6 +28,11 @@ function syncFromLocal() {
     document.getElementById('footer-admin-name').innerText = currentAdmin.name;
     document.getElementById('footer-admin-role').innerText = currentAdmin.role === 'super' ? '(Süper Admin)' : '(Personel)';
     
+    // Top right email update
+    if (document.getElementById('top-right-email-text')) {
+        document.getElementById('top-right-email-text').innerText = currentAdmin.email;
+    }
+    
     // KASA VE İSTATİSTİKLER (Role Göre)
     let dashDeps = tb_tx_logs.filter(tx => tx.type === 'deposit');
     let dashWits = tb_tx_logs.filter(tx => tx.type === 'withdraw');
@@ -35,6 +40,25 @@ function syncFromLocal() {
     if(currentAdmin.role !== 'super') {
         dashDeps = dashDeps.filter(tx => tx.staffEmail === currentAdmin.email);
         dashWits = dashWits.filter(tx => tx.staffEmail === currentAdmin.email);
+    } else {
+        const staffSelect = document.getElementById('dash-staff-select');
+        if (staffSelect) {
+            staffSelect.style.display = 'block';
+            let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+            if (staffSelect.options.length !== staffList.length + 1) {
+                let currentVal = staffSelect.value;
+                let optionsHtml = '<option value="">-- Genel İstatistik --</option>';
+                staffList.forEach(s => {
+                    optionsHtml += `<option value="${s.email}">${s.name} (${s.email})</option>`;
+                });
+                staffSelect.innerHTML = optionsHtml;
+                staffSelect.value = currentVal;
+            }
+            if (staffSelect.value) {
+                dashDeps = dashDeps.filter(tx => tx.staffEmail === staffSelect.value);
+                dashWits = dashWits.filter(tx => tx.staffEmail === staffSelect.value);
+            }
+        }
     }
     
     let sumDep = dashDeps.reduce((s, x) => s + x.amount, 0);
@@ -86,10 +110,14 @@ function syncFromLocal() {
         renderRequests();
         renderWithdraws();
         renderBanks();
+        if(typeof renderDepositHistory === 'function') renderDepositHistory();
+        if(typeof renderWithdrawHistory === 'function') renderWithdrawHistory();
     }
     
     if(currentAdmin.role === 'super') {
         renderUsers();
+        if(typeof renderDepositHistory === 'function') renderDepositHistory();
+        if(typeof renderWithdrawHistory === 'function') renderWithdrawHistory();
     }
     
     
@@ -226,42 +254,74 @@ function renderDashboardChart(deps, wits) {
 function renderRequests() {
     const list = document.getElementById('requests-list');
     const badge = document.getElementById('deposit-count-badge');
+    const totalCountSpan = document.getElementById('deposit-total-count');
+    
+    if (totalCountSpan) totalCountSpan.innerText = pendingDeposit ? '1' : '0';
     
     if (!pendingDeposit) {
-        list.innerHTML = '<div class="no-data">Bekleyen yatırım talebi bulunamadı.</div>';
-        badge.innerText = '0';
-        badge.style.display = 'none';
+        list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Bekleyen yatırım talebi bulunamadı.</td></tr>';
+        if(badge) { badge.innerText = '0'; badge.style.display = 'none'; }
         return;
     }
 
-    badge.innerText = '1';
-    badge.style.display = 'block';
+    if(badge) { badge.innerText = '1'; badge.style.display = 'block'; }
     
-    // Güvenlik: Eğer eski data ise userName undefined olabilir
     const uName = pendingDeposit.userName || 'Bilinmiyor';
     const uEmail = pendingDeposit.userEmail || '-';
+    // Kullanıcı adını mailden türetelim (örn: ali@mail.com -> ali)
+    const username = uEmail.includes('@') ? uEmail.split('@')[0] : uEmail;
+    
+    // Bank details
+    const bankInfo = activeBanks.find(b => b.name === pendingDeposit.bank);
+    const hesapSahibi = bankInfo ? bankInfo.owner : 'VoltBet VIP';
+    const ibanStr = bankInfo ? bankInfo.iban : '-';
+
+    // format date as DD.MM.YYYY HH:MM
+    const today = new Date();
+    const dDate = today.toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' + today.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
 
     list.innerHTML = `
-        <div class="req-row">
-            <div class="info">
-                <div class="amt">${pendingDeposit.amount.toFixed(2)} ₺</div>
-                <div style="font-size:12px; color:#666;">
-                    ${pendingDeposit.bank} | ID: #${pendingDeposit.id}<br>
-                    <span style="color:#1fcc5a; font-weight:bold;">${uName}</span> (${uEmail})
+        <tr style="border-bottom:1px solid #e1e5eb; transition:background 0.2s; cursor:default;" onmouseover="this.style.background='#f4f5f7'" onmouseout="this.style.background='transparent'">
+            <td style="padding:15px 10px; color:#172b4d;">
+                <div style="display:flex; align-items:center; gap:10px; justify-content:center;">
+                    <span style="color:#aaa; font-size:10px;">▶</span> ${pendingDeposit.id}
                 </div>
+            </td>
+            <td style="padding:15px 10px; color:#172b4d;">${hesapSahibi}</td>
+            <td style="padding:15px 10px; color:#172b4d;">${pendingDeposit.bank}</td>
+            <td style="padding:15px 10px; color:#6b778c;">${ibanStr}</td>
+            <td style="padding:15px 10px;">
+                <div style="border:1px solid #e11d48; color:#e11d48; padding:4px 8px; border-radius:3px; font-weight:bold; font-size:11px; display:inline-block; text-transform:uppercase;">
+                    ${uName}
                 </div>
-            </div>
-            <div class="actions" style="display:flex; gap:10px;">
-                <button class="approve-btn" onclick="approveDeposit()">ONAYLA</button>
-                <button class="reject-btn" onclick="rejectDeposit()" style="background:#e11d48; color:#fff; border:none; padding:8px 15px; border-radius:5px; font-weight:700; cursor:pointer;">REDDET</button>
-            </div>
-        </div>
+            </td>
+            <td style="padding:15px 10px;">
+                <div style="border:1px solid #02b875; color:#02b875; padding:4px 8px; border-radius:3px; font-weight:bold; font-size:12px; display:inline-block;">
+                    ${pendingDeposit.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})} ₺
+                </div>
+            </td>
+            <td style="padding:15px 10px; color:#172b4d;">${username}</td>
+            <td style="padding:15px 10px; color:#172b4d; font-size:12px;">
+                ${dDate} <span style="border:1px solid #e11d48; color:#e11d48; padding:2px 5px; border-radius:3px; font-size:10px; margin-left:5px;">0</span>
+            </td>
+            <td style="padding:15px 10px;">
+                <div style="display:flex; gap:5px; justify-content:center;">
+                    <button onclick="approveDeposit()" style="background:#fff; border:1px solid #02b875; color:#02b875; padding:6px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#02b875'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#02b875';">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+                    </button>
+                    <button onclick="rejectDeposit()" style="background:#fff; border:1px solid #e11d48; color:#e11d48; padding:6px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#e11d48'; this.style.color='#fff';" onmouseout="this.style.background='#fff'; this.style.color='#e11d48';">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                    </button>
+                </div>
+            </td>
+        </tr>
     `;
 }
 
 function rejectDeposit() {
     if (pendingDeposit) {
-        if(confirm("Talebi reddetmek istediğinize emin misiniz? Bakiye eklenmeyecek.")) {
+        if(confirm("Talebi tamamen reddetmek ve havuzdan silmek istediğinize emin misiniz? Bakiye eklenmeyecek.")) {
+            saveToDepositHistory(pendingDeposit, 'Reddedildi');
             localStorage.setItem('tb_pending_deposit', 'null');
             alert("Yatırım talebi reddedildi ve silindi.");
             syncFromLocal();
@@ -269,14 +329,49 @@ function rejectDeposit() {
     }
 }
 
+// Opens the Modal
 function approveDeposit() {
+    if (!pendingDeposit) return;
+    
+    // Bank details
+    const bankInfo = activeBanks.find(b => b.name === pendingDeposit.bank);
+    const hesapSahibi = bankInfo ? bankInfo.owner : 'Sistem Bankası';
+    const ibanStr = bankInfo ? bankInfo.iban.replace(/[-\s]/g, '') : '-';
+    
+    document.getElementById('dep-modal-id').innerText = '#' + pendingDeposit.id;
+    document.getElementById('dep-modal-name').innerText = pendingDeposit.userName || 'Bilinmiyor';
+    document.getElementById('dep-modal-sBank').innerText = pendingDeposit.senderBank || 'Belirtilmedi';
+    document.getElementById('dep-modal-bank').innerText = pendingDeposit.bank;
+    document.getElementById('dep-modal-owner').innerText = hesapSahibi;
+    document.getElementById('dep-modal-iban').innerText = ibanStr;
+    document.getElementById('dep-modal-amount-input').value = pendingDeposit.amount;
+    
+    document.getElementById('deposit-modal-overlay').style.display = 'flex';
+}
+
+function closeDepositModal() {
+    document.getElementById('deposit-modal-overlay').style.display = 'none';
+}
+
+// Actually processes the deposit inside the modal
+function confirmApproveDeposit() {
     if (pendingDeposit) {
         if (!pendingDeposit.userEmail) {
             alert('Bu eski/hatalı bir talep, e-posta eksik!');
             localStorage.setItem('tb_pending_deposit', 'null');
+            closeDepositModal();
             syncFromLocal();
             return;
         }
+
+        let finalAmount = parseFloat(document.getElementById('dep-modal-amount-input').value);
+        if (isNaN(finalAmount) || finalAmount <= 0) {
+            alert('Lütfen geçerli bir onay tutarı girin!');
+            return;
+        }
+
+        // Tutar düzenlenmişse, asıl objeyi güncelliyoruz (Geçmişe de bu tutarla yansıyacak)
+        pendingDeposit.amount = finalAmount;
 
         // Find user and add balance
         let user = usersList.find(u => u.email === pendingDeposit.userEmail);
@@ -307,7 +402,9 @@ function approveDeposit() {
             alert('Uyarı: Talep yapan kullanıcı sistemde bulunamadı. Sadece talep silinecek.');
         }
 
+        saveToDepositHistory(pendingDeposit, 'Onaylandı');
         localStorage.setItem('tb_pending_deposit', 'null');
+        closeDepositModal();
         syncFromLocal();
     }
 }
@@ -516,6 +613,7 @@ function confirmApproveWithdraw() {
         localStorage.setItem('tb_tx_logs', JSON.stringify(logs));
     }
 
+    saveToWithdrawHistory(req, 'Onaylandı');
     pendingWithdraws = pendingWithdraws.filter(req => req.id !== id);
     localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
     
@@ -542,6 +640,7 @@ function rejectWithdraw(id) {
             localStorage.setItem('tb_users', JSON.stringify(usersList));
         }
         
+        saveToWithdrawHistory(req, 'Reddedildi');
         // Remove request
         pendingWithdraws.splice(reqIndex, 1);
         localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
@@ -555,15 +654,43 @@ function rejectWithdraw(id) {
 function renderBanks() {
     const list = document.getElementById('banks-list');
     list.innerHTML = '';
+    
+    let depositHistory = JSON.parse(localStorage.getItem('tb_deposit_history') || '[]');
+    let todayStart = new Date();
+    todayStart.setHours(0,0,0,0);
+    
     activeBanks.forEach((bank, index) => {
+        let minL = bank.minLimit || 10;
+        let maxL = bank.maxLimit || 1000000;
+        let limText = `<span style="border:1px solid #02b875; color:#02b875; font-size:10px; padding:2px 6px; border-radius:3px; margin-left:10px;">Min: ${minL.toLocaleString('tr-TR')} ₺ | Max: ${maxL.toLocaleString('tr-TR')} ₺</span>`;
+        
+        let todayDeposits = depositHistory.filter(req => {
+            if (req.bank !== bank.name || req.statusText !== 'Onaylandı') return false;
+            let d = new Date(req.processedDate);
+            return d.getTime() >= todayStart.getTime();
+        });
+        
+        let todayCount = todayDeposits.length;
+        let todayTotal = todayDeposits.reduce((acc, curr) => acc + curr.amount, 0);
+        
+        let statsHtml = `<div style="margin-top:10px; font-size:11px; color:#555; background:#f4f5f7; padding:6px 10px; border-radius:4px; border-left:3px solid #0056b3; display:flex; justify-content:space-between;">
+            <span>Bugün Onaylanan Yatırım: <b style="color:#0056b3;">${todayCount} İşlem</b></span>
+            <span>Toplam: <b style="color:#02b875;">${todayTotal.toLocaleString('tr-TR')} ₺</b></span>
+        </div>`;
+
         const item = document.createElement('div');
         item.className = 'bank-item';
+        item.style.flexDirection = 'column';
+        item.style.alignItems = 'stretch';
         item.innerHTML = `
-            <div class="info">
-                <div class="name">${bank.name}</div>
-                <div class="iban">${bank.owner} | ${bank.iban}</div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div class="info">
+                    <div class="name" style="display:flex; align-items:center;">${bank.name} ${limText}</div>
+                    <div class="iban" style="margin-top:5px;">${bank.owner} | ${bank.iban}</div>
+                </div>
+                <button class="del-btn" onclick="removeBank(${index})" style="margin-left:15px;">🗑️</button>
             </div>
-            <button class="del-btn" onclick="removeBank(${index})">🗑️</button>
+            ${statsHtml}
         `;
         list.appendChild(item);
     });
@@ -573,15 +700,25 @@ function addNewBank() {
     const name = document.getElementById('new-bank-name').value;
     const owner = document.getElementById('new-bank-owner').value;
     const iban = document.getElementById('new-bank-iban').value;
+    const minLimitInput = document.getElementById('new-bank-minlimit').value;
+    const maxLimitInput = document.getElementById('new-bank-maxlimit').value;
 
     if (!name || !owner || !iban) { alert('Tüm alanları doldurun!'); return; }
+    
+    let limit = parseFloat(minLimitInput);
+    if(isNaN(limit) || limit < 0) limit = 10;
+    
+    let maxLimit = parseFloat(maxLimitInput);
+    if(isNaN(maxLimit) || maxLimit < limit) maxLimit = 1000000;
 
-    activeBanks.push({ name, owner, iban });
+    activeBanks.push({ name, owner, iban, minLimit: limit, maxLimit: maxLimit });
     saveBanks();
     
     document.getElementById('new-bank-name').value = '';
     document.getElementById('new-bank-owner').value = '';
     document.getElementById('new-bank-iban').value = '';
+    document.getElementById('new-bank-minlimit').value = '';
+    document.getElementById('new-bank-maxlimit').value = '';
 }
 
 function removeBank(index) {
@@ -688,9 +825,11 @@ function initAdminPanel() {
         if(document.getElementById('nav-staff')) document.getElementById('nav-staff').style.display = 'block';
         if(document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'block';
         if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'none';
+        if(document.getElementById('nav-deposit-history')) document.getElementById('nav-deposit-history').style.display = 'none';
         if(document.getElementById('nav-withdraws')) document.getElementById('nav-withdraws').style.display = 'none';
+        if(document.getElementById('nav-withdraw-history')) document.getElementById('nav-withdraw-history').style.display = 'none';
         if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'none';
-        if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'none';
+        if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'block';
         
         if(document.getElementById('top-kasa-widget')) document.getElementById('top-kasa-widget').style.display = 'flex';
         if(document.getElementById('admin-display-name-input')) document.getElementById('admin-display-name-input').value = currentAdmin.name;
@@ -699,10 +838,12 @@ function initAdminPanel() {
         if(document.getElementById('nav-staff')) document.getElementById('nav-staff').style.display = 'none';
         if(document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'none';
         if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'block';
+        if(document.getElementById('nav-deposit-history')) document.getElementById('nav-deposit-history').style.display = 'block';
         if(document.getElementById('nav-withdraws')) document.getElementById('nav-withdraws').style.display = 'block';
+        if(document.getElementById('nav-withdraw-history')) document.getElementById('nav-withdraw-history').style.display = 'block';
         if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'block';
-        if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'none'; // Destek ayrı kurulacak dediniz.
-        if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = 'none'; // Sadece 4 yetki istendi
+        if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'none';
+        if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = 'none';
         
         if(document.getElementById('top-kasa-widget')) document.getElementById('top-kasa-widget').style.display = 'none';
         if(document.getElementById('admin-display-name-input')) document.getElementById('admin-display-name-input').value = currentAdmin.name;
@@ -869,6 +1010,8 @@ function renderStaffTable() {
                 <td style="padding:10px; font-weight:bold; color:${net >= 0 ? '#1fcc5a' : '#e11d48'};">${net.toFixed(2)} ₺</td>
                 <td style="padding:10px;">${faStatus}</td>
                 <td style="padding:10px;">
+                    <button onclick="adjustStaffBalance('${s.email}', true)" style="background:#1fcc5a; border:none; padding:5px 10px; color:#000; font-weight:bold; border-radius:3px; cursor:pointer; font-size:11px; margin-right:5px;">Ekle (+)</button>
+                    <button onclick="adjustStaffBalance('${s.email}', false)" style="background:#ff9f00; border:none; padding:5px 10px; color:#000; font-weight:bold; border-radius:3px; cursor:pointer; font-size:11px; margin-right:5px;">Eksilt (-)</button>
                     <button onclick="deleteStaff('${s.email}')" style="background:#e11d48; border:none; padding:5px 10px; color:#fff; border-radius:3px; cursor:pointer; font-size:11px;">Sil</button>
                 </td>
             </tr>
@@ -876,6 +1019,35 @@ function renderStaffTable() {
     });
     tbody.innerHTML = html;
 }
+
+window.adjustStaffBalance = function(email, isAdd) {
+    let amountStr = prompt(isAdd ? 'Eklenecek tutarı girin (₺):' : 'Eksiltilecek tutarı girin (₺):');
+    if(!amountStr) return;
+    let amount = parseFloat(amountStr);
+    if(isNaN(amount) || amount <= 0) return alert('Geçerli bir tutar giriniz.');
+    
+    let logs = JSON.parse(localStorage.getItem('tb_tx_logs') || '[]');
+    let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+    let staffUser = staffList.find(s => s.email === email);
+    if(!staffUser) return alert('Personel bulunamadı.');
+    
+    logs.push({
+        id: 'SYS' + Date.now(),
+        userId: 'system_adjust',
+        userEmail: 'Yönetim Merkezi',
+        amount: amount,
+        type: isAdd ? 'deposit' : 'withdraw',
+        bank: 'Sistem Kasa İşlemi',
+        senderName: 'Süper Admin',
+        status: 'approved',
+        date: new Date().toLocaleString('tr-TR'),
+        timestamp: Date.now(),
+        staffEmail: email
+    });
+    localStorage.setItem('tb_tx_logs', JSON.stringify(logs));
+    syncFromLocal();
+    alert(staffUser.name + ' personeline ' + amount + ' ₺ bakiye ' + (isAdd ? 'eklendi' : 'silindi') + '!');
+};
 
 // BAŞLAT
 initAdminPanel();
@@ -1019,4 +1191,117 @@ function sendAdminChat() {
     
     renderAdminChatUsers();
     renderAdminChatMessages();
+}
+
+// ==========================================
+// HISTORY / GEÇMİŞ (Onay/Red Kayıtları) YÖNETİMİ
+// ==========================================
+
+function saveToDepositHistory(req, status) {
+    let history = JSON.parse(localStorage.getItem('tb_deposit_history') || '[]');
+    req.statusText = status;
+    req.processedDate = new Date().toISOString();
+    req.processedBy = currentAdmin ? currentAdmin.name : 'Sistem';
+    history.unshift(req);
+    localStorage.setItem('tb_deposit_history', JSON.stringify(history));
+}
+
+function saveToWithdrawHistory(req, status) {
+    let history = JSON.parse(localStorage.getItem('tb_withdraw_history') || '[]');
+    req.statusText = status;
+    req.processedDate = new Date().toISOString();
+    req.processedBy = currentAdmin ? currentAdmin.name : 'Sistem';
+    history.unshift(req);
+    localStorage.setItem('tb_withdraw_history', JSON.stringify(history));
+}
+
+function renderDepositHistory() {
+    const list = document.getElementById('deposit-history-list');
+    const badge = document.getElementById('deposit-count-badge'); // Not for history really
+    const totalCountSpan = document.getElementById('deposit-history-total-count');
+    
+    let history = JSON.parse(localStorage.getItem('tb_deposit_history') || '[]');
+    if(totalCountSpan) totalCountSpan.innerText = history.length;
+    
+    if(history.length === 0) {
+        if(list) list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Geçmiş yatırım talebi bulunamadı.</td></tr>';
+        return;
+    }
+    
+    if(list) {
+        let html = '';
+        history.forEach(req => {
+            const uName = req.userName || 'Bilinmiyor';
+            const username = req.userEmail ? req.userEmail.split('@')[0] : '-';
+            const bankInfo = activeBanks.find(b => b.name === req.bank);
+            const hesapSahibi = bankInfo ? bankInfo.owner : 'VoltBet VIP';
+            const ibanStr = bankInfo ? bankInfo.iban : '-';
+            
+            let d = new Date(req.processedDate || Date.now());
+            const dDate = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+            
+            let statusBadge = req.statusText === 'Onaylandı' ? 
+                '<span style="background:#02b875; color:#fff; padding:3px 8px; border-radius:3px; font-size:10px; font-weight:bold;">ONAYLANDI</span>' : 
+                '<span style="background:#e11d48; color:#fff; padding:3px 8px; border-radius:3px; font-size:10px; font-weight:bold;">REDDEDİLDİ</span>';
+
+            html += `
+            <tr style="border-bottom:1px solid #e1e5eb; background:#fff; transition:background 0.2s;" onmouseover="this.style.background='#f4f5f7'" onmouseout="this.style.background='transparent'">
+                <td style="padding:15px 10px; color:#172b4d;">${req.id}</td>
+                <td style="padding:15px 10px; color:#172b4d;">${hesapSahibi}</td>
+                <td style="padding:15px 10px; color:#172b4d;">${req.bank}</td>
+                <td style="padding:15px 10px; color:#6b778c;">${ibanStr}</td>
+                <td style="padding:15px 10px;">${uName}</td>
+                <td style="padding:15px 10px; font-weight:bold; color:#02b875;">${req.amount.toLocaleString('tr-TR')} ₺</td>
+                <td style="padding:15px 10px; color:#172b4d;">${username}</td>
+                <td style="padding:15px 10px; color:#172b4d; font-size:11px;">${dDate}</td>
+                <td style="padding:15px 10px; text-align:center;">
+                    ${statusBadge}
+                    <div style="font-size:10px; color:#777; margin-top:5px;">İşlem: ${req.processedBy || 'Personel'}</div>
+                </td>
+            </tr>`;
+        });
+        list.innerHTML = html;
+    }
+}
+
+function renderWithdrawHistory() {
+    const list = document.getElementById('withdraw-history-list-body');
+    const totalCountSpan = document.getElementById('withdraw-history-total-count');
+    
+    let history = JSON.parse(localStorage.getItem('tb_withdraw_history') || '[]');
+    if(totalCountSpan) totalCountSpan.innerText = history.length;
+    
+    if(history.length === 0) {
+        if(list) list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Geçmiş çekim talebi bulunamadı.</td></tr>';
+        return;
+    }
+    
+    if(list) {
+        let html = '';
+        history.forEach(req => {
+            let d = new Date(req.processedDate || Date.now());
+            const dateStr = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+            
+            let statusBadge = req.statusText === 'Onaylandı' ? 
+                '<span style="background:#02b875; color:#fff; padding:3px 8px; border-radius:3px; font-size:10px; font-weight:bold;">ONAYLANDI</span>' : 
+                '<span style="background:#e11d48; color:#fff; padding:3px 8px; border-radius:3px; font-size:10px; font-weight:bold;">REDDEDİLDİ</span>';
+
+            html += `
+            <tr style="border-bottom:1px solid #eee; background:#fff;">
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${req.id}</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; font-weight:600;">${req.name}</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${req.iban}</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555;">Havale/EFT</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; font-weight:bold; color:#02b875;">₺${req.amount.toLocaleString('tr-TR')}</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5;"><span style="color:#e11d48; border:1px solid #e11d48; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:600;">MANUEL</span></td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555;">Kompozit</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555; white-space:nowrap;">${dateStr}</td>
+                <td style="padding:15px 10px; text-align:center;">
+                    ${statusBadge}
+                    <div style="font-size:10px; color:#777; margin-top:5px;">İşlem: ${req.processedBy || 'Personel'}</div>
+                </td>
+            </tr>`;
+        });
+        list.innerHTML = html;
+    }
 }
