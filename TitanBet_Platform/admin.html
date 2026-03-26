@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITAN BET | JETVALE Admin Control</title>
+    <title>VOLTBET | Yönetim Paneli</title>
     <link rel="stylesheet" href="admin_style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,10 +21,7 @@
     <!-- ADMIN LOGIN OVERLAY -->
     <div id="admin-login-overlay" style="display:flex; position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0e14; z-index:99999; justify-content:center; align-items:center;">
         <div style="background:#111820; border:1px solid #1e2a38; border-radius:10px; padding:40px; width:400px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-            <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
-                <img src="logo.jpg" alt="Logo" style="height: 50px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-                <h2 style="color:#1fcc5a; font-size:24px; margin:0; letter-spacing:1px; line-height: 1;">VB FASTHAVALE<br><span style="font-size: 14px; color: #aaa;">YÖNETİM</span></h2>
-            </div>
+            <h2 style="color:#1fcc5a; font-size:24px; margin-bottom:10px; letter-spacing:1px;">VOLTBET YÖNETİM</h2>
             <p style="color:#666; font-size:13px; margin-bottom:30px;">Yetkili paneline giriş yapmak için bilgilerinizi giriniz.</p>
             <input type="email" id="admin-login-email" placeholder="Kurumsal E-Posta" style="width:100%; padding:15px; margin-bottom:15px; background:#0a0e14; border:1px solid #1e2a38; color:#fff; border-radius:8px; font-size:14px; outline:none;" required>
             <input type="password" id="admin-login-pass" placeholder="Şifreniz" style="width:100%; padding:15px; margin-bottom:25px; background:#0a0e14; border:1px solid #1e2a38; color:#fff; border-radius:8px; font-size:14px; outline:none;" required>
@@ -55,13 +52,7 @@
 
     <div class="admin-wrapper" id="admin-main-wrapper" style="display:none;">
         <aside class="admin-sidebar">
-            <div class="admin-logo" style="display: flex; align-items: center; gap: 12px; padding: 20px 30px;">
-                <img src="logo.jpg" alt="Logo" style="height: 40px; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-                <div style="line-height: 1.1;">
-                    <div style="font-size: 16px;">VB FASTHAVALE</div>
-                    <span style="font-size: 11px;">v3.0</span>
-                </div>
-            </div>
+            <div class="admin-logo">VOLTBET <span>v3.0</span></div>
             <nav id="admin-nav-menu">
                 <div class="nav-btn active" onclick="showTab('dashboard')" id="nav-dashboard">📊 Dashboard</div>
                 
