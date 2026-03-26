@@ -28,6 +28,11 @@ function syncFromLocal() {
     document.getElementById('footer-admin-name').innerText = currentAdmin.name;
     document.getElementById('footer-admin-role').innerText = currentAdmin.role === 'super' ? '(Süper Admin)' : '(Personel)';
     
+    // Top right email update
+    if (document.getElementById('top-right-email-text')) {
+        document.getElementById('top-right-email-text').innerText = currentAdmin.email;
+    }
+    
     // KASA VE İSTATİSTİKLER (Role Göre)
     let dashDeps = tb_tx_logs.filter(tx => tx.type === 'deposit');
     let dashWits = tb_tx_logs.filter(tx => tx.type === 'withdraw');

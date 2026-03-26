@@ -85,8 +85,14 @@
         <main class="admin-main">
             <header class="admin-top">
                 <h2>Yönetim Paneli</h2>
-                <div class="stats-row" id="top-kasa-widget" style="display:none;">
-                    <div class="stat-mini">GENEL KASA: <span id="admin-total-balance">0.00 ₺</span></div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div id="top-right-email" style="font-weight: 600; color: #1a73e8; background: #e8f0fe; padding: 6px 15px; border-radius: 20px; font-size: 13px; border: 1px solid #d2e3fc; display: flex; align-items: center; gap: 5px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        <span id="top-right-email-text">bekleniyor...</span>
+                    </div>
+                    <div class="stats-row" id="top-kasa-widget" style="display:none;">
+                        <div class="stat-mini">GENEL KASA: <span id="admin-total-balance">0.00 ₺</span></div>
+                    </div>
                 </div>
             </header>
 
