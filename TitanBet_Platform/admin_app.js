@@ -86,10 +86,14 @@ function syncFromLocal() {
         renderRequests();
         renderWithdraws();
         renderBanks();
+        if(typeof renderDepositHistory === 'function') renderDepositHistory();
+        if(typeof renderWithdrawHistory === 'function') renderWithdrawHistory();
     }
     
     if(currentAdmin.role === 'super') {
         renderUsers();
+        if(typeof renderDepositHistory === 'function') renderDepositHistory();
+        if(typeof renderWithdrawHistory === 'function') renderWithdrawHistory();
     }
     
     
@@ -293,6 +297,7 @@ function renderRequests() {
 function rejectDeposit() {
     if (pendingDeposit) {
         if(confirm("Talebi tamamen reddetmek ve havuzdan silmek istediğinize emin misiniz? Bakiye eklenmeyecek.")) {
+            saveToDepositHistory(pendingDeposit, 'Reddedildi');
             localStorage.setItem('tb_pending_deposit', 'null');
             alert("Yatırım talebi reddedildi ve silindi.");
             syncFromLocal();
@@ -364,6 +369,7 @@ function confirmApproveDeposit() {
             alert('Uyarı: Talep yapan kullanıcı sistemde bulunamadı. Sadece talep silinecek.');
         }
 
+        saveToDepositHistory(pendingDeposit, 'Onaylandı');
         localStorage.setItem('tb_pending_deposit', 'null');
         closeDepositModal();
         syncFromLocal();
@@ -574,6 +580,7 @@ function confirmApproveWithdraw() {
         localStorage.setItem('tb_tx_logs', JSON.stringify(logs));
     }
 
+    saveToWithdrawHistory(req, 'Onaylandı');
     pendingWithdraws = pendingWithdraws.filter(req => req.id !== id);
     localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
     
@@ -600,6 +607,7 @@ function rejectWithdraw(id) {
             localStorage.setItem('tb_users', JSON.stringify(usersList));
         }
         
+        saveToWithdrawHistory(req, 'Reddedildi');
         // Remove request
         pendingWithdraws.splice(reqIndex, 1);
         localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
@@ -746,7 +754,9 @@ function initAdminPanel() {
         if(document.getElementById('nav-staff')) document.getElementById('nav-staff').style.display = 'block';
         if(document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'block';
         if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'none';
+        if(document.getElementById('nav-deposit-history')) document.getElementById('nav-deposit-history').style.display = 'block';
         if(document.getElementById('nav-withdraws')) document.getElementById('nav-withdraws').style.display = 'none';
+        if(document.getElementById('nav-withdraw-history')) document.getElementById('nav-withdraw-history').style.display = 'block';
         if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'none';
         if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'none';
         
@@ -757,7 +767,9 @@ function initAdminPanel() {
         if(document.getElementById('nav-staff')) document.getElementById('nav-staff').style.display = 'none';
         if(document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'none';
         if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'block';
+        if(document.getElementById('nav-deposit-history')) document.getElementById('nav-deposit-history').style.display = 'block';
         if(document.getElementById('nav-withdraws')) document.getElementById('nav-withdraws').style.display = 'block';
+        if(document.getElementById('nav-withdraw-history')) document.getElementById('nav-withdraw-history').style.display = 'block';
         if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'block';
         if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'none'; // Destek ayrı kurulacak dediniz.
         if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = 'none'; // Sadece 4 yetki istendi
@@ -1077,4 +1089,117 @@ function sendAdminChat() {
     
     renderAdminChatUsers();
     renderAdminChatMessages();
+}
+
+// ==========================================
+// HISTORY / GEÇMİŞ (Onay/Red Kayıtları) YÖNETİMİ
+// ==========================================
+
+function saveToDepositHistory(req, status) {
+    let history = JSON.parse(localStorage.getItem('tb_deposit_history') || '[]');
+    req.statusText = status;
+    req.processedDate = new Date().toISOString();
+    req.processedBy = currentAdmin ? currentAdmin.name : 'Sistem';
+    history.unshift(req);
+    localStorage.setItem('tb_deposit_history', JSON.stringify(history));
+}
+
+function saveToWithdrawHistory(req, status) {
+    let history = JSON.parse(localStorage.getItem('tb_withdraw_history') || '[]');
+    req.statusText = status;
+    req.processedDate = new Date().toISOString();
+    req.processedBy = currentAdmin ? currentAdmin.name : 'Sistem';
+    history.unshift(req);
+    localStorage.setItem('tb_withdraw_history', JSON.stringify(history));
+}
+
+function renderDepositHistory() {
+    const list = document.getElementById('deposit-history-list');
+    const badge = document.getElementById('deposit-count-badge'); // Not for history really
+    const totalCountSpan = document.getElementById('deposit-history-total-count');
+    
+    let history = JSON.parse(localStorage.getItem('tb_deposit_history') || '[]');
+    if(totalCountSpan) totalCountSpan.innerText = history.length;
+    
+    if(history.length === 0) {
+        if(list) list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Geçmiş yatırım talebi bulunamadı.</td></tr>';
+        return;
+    }
+    
+    if(list) {
+        let html = '';
+        history.forEach(req => {
+            const uName = req.userName || 'Bilinmiyor';
+            const username = req.userEmail ? req.userEmail.split('@')[0] : '-';
+            const bankInfo = activeBanks.find(b => b.name === req.bank);
+            const hesapSahibi = bankInfo ? bankInfo.owner : 'VoltBet VIP';
+            const ibanStr = bankInfo ? bankInfo.iban : '-';
+            
+            let d = new Date(req.processedDate || Date.now());
+            const dDate = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+            
+            let statusBadge = req.statusText === 'Onaylandı' ? 
+                '<span style="background:#02b875; color:#fff; padding:3px 8px; border-radius:3px; font-size:10px; font-weight:bold;">ONAYLANDI</span>' : 
+                '<span style="background:#e11d48; color:#fff; padding:3px 8px; border-radius:3px; font-size:10px; font-weight:bold;">REDDEDİLDİ</span>';
+
+            html += `
+            <tr style="border-bottom:1px solid #e1e5eb; background:#fff; transition:background 0.2s;" onmouseover="this.style.background='#f4f5f7'" onmouseout="this.style.background='transparent'">
+                <td style="padding:15px 10px; color:#172b4d;">${req.id}</td>
+                <td style="padding:15px 10px; color:#172b4d;">${hesapSahibi}</td>
+                <td style="padding:15px 10px; color:#172b4d;">${req.bank}</td>
+                <td style="padding:15px 10px; color:#6b778c;">${ibanStr}</td>
+                <td style="padding:15px 10px;">${uName}</td>
+                <td style="padding:15px 10px; font-weight:bold; color:#02b875;">${req.amount.toLocaleString('tr-TR')} ₺</td>
+                <td style="padding:15px 10px; color:#172b4d;">${username}</td>
+                <td style="padding:15px 10px; color:#172b4d; font-size:11px;">${dDate}</td>
+                <td style="padding:15px 10px; text-align:center;">
+                    ${statusBadge}
+                    <div style="font-size:10px; color:#777; margin-top:5px;">İşlem: ${req.processedBy || 'Personel'}</div>
+                </td>
+            </tr>`;
+        });
+        list.innerHTML = html;
+    }
+}
+
+function renderWithdrawHistory() {
+    const list = document.getElementById('withdraw-history-list-body');
+    const totalCountSpan = document.getElementById('withdraw-history-total-count');
+    
+    let history = JSON.parse(localStorage.getItem('tb_withdraw_history') || '[]');
+    if(totalCountSpan) totalCountSpan.innerText = history.length;
+    
+    if(history.length === 0) {
+        if(list) list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Geçmiş çekim talebi bulunamadı.</td></tr>';
+        return;
+    }
+    
+    if(list) {
+        let html = '';
+        history.forEach(req => {
+            let d = new Date(req.processedDate || Date.now());
+            const dateStr = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+            
+            let statusBadge = req.statusText === 'Onaylandı' ? 
+                '<span style="background:#02b875; color:#fff; padding:3px 8px; border-radius:3px; font-size:10px; font-weight:bold;">ONAYLANDI</span>' : 
+                '<span style="background:#e11d48; color:#fff; padding:3px 8px; border-radius:3px; font-size:10px; font-weight:bold;">REDDEDİLDİ</span>';
+
+            html += `
+            <tr style="border-bottom:1px solid #eee; background:#fff;">
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${req.id}</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; font-weight:600;">${req.name}</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${req.iban}</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555;">Havale/EFT</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; font-weight:bold; color:#02b875;">₺${req.amount.toLocaleString('tr-TR')}</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5;"><span style="color:#e11d48; border:1px solid #e11d48; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:600;">MANUEL</span></td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555;">Kompozit</td>
+                <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555; white-space:nowrap;">${dateStr}</td>
+                <td style="padding:15px 10px; text-align:center;">
+                    ${statusBadge}
+                    <div style="font-size:10px; color:#777; margin-top:5px;">İşlem: ${req.processedBy || 'Personel'}</div>
+                </td>
+            </tr>`;
+        });
+        list.innerHTML = html;
+    }
 }
