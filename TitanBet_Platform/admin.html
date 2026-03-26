@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="admin_style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* SIFIR (0) İÇİNDEKİ ÇİZGİYİ KÖKTEN KALDIRMA KURALI */
+        *, body, table, td, th, strong, span, div, input, button {
+            font-variant-numeric: normal !important; 
+            font-feature-settings: 'zero' 0 !important;
+            /* Monospace fontları ezip Roboto/Arial kullanmaya zorlar */
+            font-family: 'Roboto', Arial, sans-serif !important;
+        }
+    </style>
 </head>
 <body>
     <!-- ADMIN LOGIN OVERLAY -->
@@ -461,7 +470,7 @@
                     </div>
                     <div style="display:flex; justify-content:space-between;">
                         <span style="color:#666;">Alıcı IBAN:</span>
-                        <strong id="dep-modal-iban" style="color:#0984e3; letter-spacing:1px; font-family:monospace;">-</strong>
+                        <strong id="dep-modal-iban" style="color:#0984e3; letter-spacing:1px; font-family: Arial, Helvetica, sans-serif !important; font-variant-numeric: normal !important; font-feature-settings: 'zero' 0 !important;">-</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; font-size:18px;">
                         <span>Yatırım Tutarı:</span>

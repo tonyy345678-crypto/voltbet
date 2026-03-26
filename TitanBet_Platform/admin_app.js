@@ -307,7 +307,7 @@ function approveDeposit() {
     // Bank details
     const bankInfo = activeBanks.find(b => b.name === pendingDeposit.bank);
     const hesapSahibi = bankInfo ? bankInfo.owner : 'Sistem Bankası';
-    const ibanStr = bankInfo ? bankInfo.iban : '-';
+    const ibanStr = bankInfo ? bankInfo.iban.replace(/[-\s]/g, '') : '-';
     
     document.getElementById('dep-modal-id').innerText = '#' + pendingDeposit.id;
     document.getElementById('dep-modal-name').innerText = pendingDeposit.userName || 'Bilinmiyor';
