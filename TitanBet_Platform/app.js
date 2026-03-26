@@ -225,7 +225,8 @@ function openDeposit() {
         activeBanks.forEach((bank, index) => {
             const opt = document.createElement('option');
             opt.value = index;
-            opt.innerText = bank.name + " (" + bank.owner + ")";
+            let limitTxt = bank.minLimit ? ` - Min: ${bank.minLimit.toLocaleString('tr-TR')} ₺` : '';
+            opt.innerText = bank.name + " (" + bank.owner + ")" + limitTxt;
             select.appendChild(opt);
         });
         
@@ -271,7 +272,7 @@ function submitDeposit() {
     const senderBank = document.getElementById('deposit-sender-bank').value.trim();
     const senderName = document.getElementById('deposit-sender-name').value.trim();
 
-    if (!amt || amt < 10) { alert('Lütfen geçerli bir tutar girin (Min 10 ₺)'); return; }
+    if (!amt || isNaN(amt)) { alert('Lütfen geçerli bir tutar girin!'); return; }
     if (activeBanks.length === 0) { alert('Şu anda aktif bir IBAN bulunmamaktadır!'); return; }
     if (bankIdx === "") { alert('Lütfen bir hesabımızı seçin!'); return; }
     if (!senderBank) { alert('Lütfen parayı gönderdiğiniz (kendi) bankanızı yazın!'); return; }
@@ -279,6 +280,13 @@ function submitDeposit() {
     if (!currentUser) { alert('Lütfen önce giriş yapın!'); return; }
 
     const bank = activeBanks[bankIdx];
+    const limit = bank.minLimit || 10;
+    
+    if (amt < limit) {
+        alert(`Bu banka için minimum yatırım limiti ${limit.toLocaleString('tr-TR')} ₺'dir.`);
+        return;
+    }
+
     pendingDeposit = { 
         amount: amt, 
         bank: bank.name, 

@@ -622,11 +622,12 @@ function renderBanks() {
     const list = document.getElementById('banks-list');
     list.innerHTML = '';
     activeBanks.forEach((bank, index) => {
+        let limText = bank.minLimit ? `<span style="border:1px solid #02b875; color:#02b875; font-size:10px; padding:2px 6px; border-radius:3px; margin-left:10px;">Min: ${bank.minLimit.toLocaleString('tr-TR')} ₺</span>` : '';
         const item = document.createElement('div');
         item.className = 'bank-item';
         item.innerHTML = `
             <div class="info">
-                <div class="name">${bank.name}</div>
+                <div class="name" style="display:flex; align-items:center;">${bank.name} ${limText}</div>
                 <div class="iban">${bank.owner} | ${bank.iban}</div>
             </div>
             <button class="del-btn" onclick="removeBank(${index})">🗑️</button>
@@ -639,15 +640,20 @@ function addNewBank() {
     const name = document.getElementById('new-bank-name').value;
     const owner = document.getElementById('new-bank-owner').value;
     const iban = document.getElementById('new-bank-iban').value;
+    const minLimitInput = document.getElementById('new-bank-minlimit').value;
 
     if (!name || !owner || !iban) { alert('Tüm alanları doldurun!'); return; }
+    
+    let limit = parseFloat(minLimitInput);
+    if(isNaN(limit) || limit < 0) limit = 10;
 
-    activeBanks.push({ name, owner, iban });
+    activeBanks.push({ name, owner, iban, minLimit: limit });
     saveBanks();
     
     document.getElementById('new-bank-name').value = '';
     document.getElementById('new-bank-owner').value = '';
     document.getElementById('new-bank-iban').value = '';
+    document.getElementById('new-bank-minlimit').value = '';
 }
 
 function removeBank(index) {

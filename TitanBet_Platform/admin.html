@@ -488,9 +488,10 @@
                 <div class="section-card">
                     <h3>Banka Hesap Yönetimi</h3>
                     <div class="bank-form-inline">
-                        <input type="text" id="new-bank-name" placeholder="Banka Adı">
-                        <input type="text" id="new-bank-owner" placeholder="Hesap Sahibi">
-                        <input type="text" id="new-bank-iban" placeholder="TR00...">
+                        <input type="text" id="new-bank-name" placeholder="Banka Adı" style="flex:1;">
+                        <input type="text" id="new-bank-owner" placeholder="Hesap Sahibi" style="flex:1;">
+                        <input type="text" id="new-bank-iban" placeholder="TR00..." style="flex:2;">
+                        <input type="number" id="new-bank-minlimit" placeholder="Min. Limit (₺)" style="width:120px; padding:10px; border:1px solid #444; border-radius:5px; background:#000; color:#fff;">
                         <button onclick="addNewBank()">YENİ HESAP EKLE</button>
                     </div>
                     <div id="banks-list" class="banks-grid"></div>
