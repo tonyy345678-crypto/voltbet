@@ -523,6 +523,7 @@ function renderWithdraws() {
 
             // Format date
             let d = new Date(req.timestamp || Date.now());
+            let waitMins = Math.floor((Date.now() - d.getTime()) / 60000);
             let dateStr = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
 
             let formattedAmt = `<span style="color:#02b875; border:1px solid #02b875; padding:3px 8px; border-radius:3px; font-weight:600;">₺${req.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})}</span>`;
@@ -574,8 +575,8 @@ function renderWithdraws() {
                 }
                 
                 actionHtml = `
-                    <button onclick="reserveWithdraw(${req.id})" style="background:#fff; border:1px solid #f39c12; color:#f39c12; padding:5px 15px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px; margin:auto;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Rezerve Et
+                    <button onclick="openReserveConfirmModal(${req.id})" style="background:#fff; border:1px solid #f39c12; color:#f39c12; padding:5px 15px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px; margin:auto;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> İşleme Al
                     </button>
                 `;
             }
@@ -605,7 +606,7 @@ function renderWithdraws() {
                     <td style="padding:15px 10px; border-right:1px solid #f5f5f5;">${kaynakHtml}</td>
                     <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555;">Kompozit</td>
                     <td style="padding:15px 10px; border-right:1px solid #f5f5f5; color:#555; white-space:nowrap;">
-                        ${dateStr} <span style="border:1px solid #ddd; padding:1px 4px; border-radius:3px; font-size:10px; margin-left:3px;">17</span>
+                        ${dateStr} <span style="border:1px solid #ddd; padding:1px 4px; border-radius:3px; font-size:10px; margin-left:3px;" title="Geçen süre">${waitMins}</span>
                     </td>
                     <td style="padding:15px 10px;">${actionHtml}</td>
                 </tr>
@@ -614,6 +615,23 @@ function renderWithdraws() {
         });
         list.innerHTML = html;
     }
+}
+
+function openReserveConfirmModal(id) {
+    document.getElementById('reserve-modal-id').value = id;
+    document.getElementById('reserve-confirm-overlay').style.display = 'flex';
+}
+
+function closeReserveConfirmModal() {
+    document.getElementById('reserve-confirm-overlay').style.display = 'none';
+}
+
+function confirmReserveBtnClicked() {
+    let id = parseInt(document.getElementById('reserve-modal-id').value);
+    if (!isNaN(id)) {
+        reserveWithdraw(id);
+    }
+    closeReserveConfirmModal();
 }
 
 function reserveWithdraw(id) {
