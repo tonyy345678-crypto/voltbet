@@ -528,6 +528,8 @@ function renderWithdraws() {
             let formattedAmt = `<span style="color:#02b875; border:1px solid #02b875; padding:3px 8px; border-radius:3px; font-weight:600;">₺${req.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})}</span>`;
             let kaynakHtml = `<span style="color:#e11d48; border:1px solid #e11d48; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:600;">MANUEL</span>`;
 
+            let asSuperAdmin = currentAdmin && currentAdmin.role === 'super';
+
             if (isReservedByMe) {
                 // Fully visible
                 nameHtml = `<div style="display:inline-flex; align-items:center; gap:5px; border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name} <span style="cursor:pointer;" title="Kopyala">📋</span></div>`;
@@ -545,21 +547,52 @@ function renderWithdraws() {
                     </div>
                 `;
             } else if (isReservedByOther) {
-                // Masked, but show who has it
-                nameHtml = `<div style="font-weight:600; color:#888;">Başka Yetkilide</div>`;
-                ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#888; background:#f9f9f9;">İşlemde: ${req.reservedBy}</div>`;
-                actionHtml = `<span style="color:#888; font-size:12px; font-weight:bold;">Rezerve Edildi</span>`;
+                let timeText = '';
+                if (req.reservedAt) {
+                    let diffMins = Math.floor((Date.now() - req.reservedAt) / 60000);
+                    timeText = `<span style="font-size:10px; color:#e11d48; display:block; margin-top:2px;">⏱️ ${diffMins} dk önce</span>`;
+                }
+
+                if (asSuperAdmin) {
+                    nameHtml = `<div style="display:inline-flex; align-items:center; gap:5px; border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name}</div>`;
+                    ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#333;">${req.iban}</div>`;
+                } else {
+                    nameHtml = `<div style="font-weight:600; color:#888;">Başka Yetkilide</div>`;
+                    ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#888; background:#f9f9f9;">Gizli</div>`;
+                }
+                
+                actionHtml = `<span style="color:#888; font-size:12px; font-weight:bold;">İşlemde: ${req.reservedBy}</span>${timeText}`;
             } else {
-                // Havuzda, Masked
-                let maskedName = req.name.substring(0,2) + '********';
-                nameHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${maskedName}</div>`;
-                ibanHtml = `<div style="color:#e11d48; border:1px solid #e11d48; padding:4px 10px; border-radius:4px; font-weight:500;">IBAN Gizli (Rezerve Et)</div>`;
+                // Havuzda
+                if (asSuperAdmin) {
+                    nameHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name}</div>`;
+                    ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:500;">${req.iban}</div>`;
+                } else {
+                    let maskedName = req.name.substring(0,2) + '********';
+                    nameHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${maskedName}</div>`;
+                    ibanHtml = `<div style="color:#e11d48; border:1px solid #e11d48; padding:4px 10px; border-radius:4px; font-weight:500;">IBAN Gizli (Rezerve Et)</div>`;
+                }
                 
                 actionHtml = `
                     <button onclick="reserveWithdraw(${req.id})" style="background:#fff; border:1px solid #f39c12; color:#f39c12; padding:5px 15px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px; margin:auto;">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Rezerve Et
                     </button>
                 `;
+            }
+
+            // ATAMA ARAYÜZÜ (SADECE SUPER ADMIN İÇİN)
+            if (asSuperAdmin && !isReservedByMe) {
+                let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+                let options = `<option value="">Personele Ata (İlet)</option>`;
+                staffList.forEach(s => {
+                    options += `<option value="${s.name}">${s.name} (${s.email})</option>`;
+                });
+                let selectHtml = `
+                    <select onchange="if(this.value) assignWithdraw(${req.id}, this.value)" style="margin-top:6px; width:100%; border:1px dashed #0052cc; color:#0052cc; background:#f0f5ff; padding:3px 5px; border-radius:3px; outline:none; font-size:10px; cursor:pointer; font-weight:bold;">
+                        ${options}
+                    </select>
+                `;
+                actionHtml += selectHtml;
             }
 
             html += `
@@ -588,6 +621,7 @@ function reserveWithdraw(id) {
     let reqIndex = pendingWithdraws.findIndex(req => req.id === id);
     if(reqIndex !== -1) {
         pendingWithdraws[reqIndex].reservedBy = adminProfile.name;
+        pendingWithdraws[reqIndex].reservedAt = Date.now();
         localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
         syncFromLocal();
     }
@@ -598,10 +632,23 @@ function releaseWithdraw(id) {
     let reqIndex = pendingWithdraws.findIndex(req => req.id === id);
     if(reqIndex !== -1) {
         delete pendingWithdraws[reqIndex].reservedBy;
+        delete pendingWithdraws[reqIndex].reservedAt;
         localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
         syncFromLocal();
     }
 }
+
+window.assignWithdraw = function(id, staffName) {
+    if (!staffName) return;
+    let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
+    let reqIndex = pendingWithdraws.findIndex(req => req.id === id);
+    if(reqIndex !== -1) {
+        pendingWithdraws[reqIndex].reservedBy = staffName;
+        pendingWithdraws[reqIndex].reservedAt = Date.now();
+        localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
+        syncFromLocal();
+    }
+};
 
 let currentWithdrawProcessingId = null;
 
