@@ -547,13 +547,19 @@ function renderWithdraws() {
 
                 if (req.reservedBy) {
                     let diffMins = req.reservedAt ? Math.floor((Date.now() - req.reservedAt) / 60000) : 0;
-                    let timerBadge = `<span style="font-size:10px; color:#e11d48; display:block; margin-top:2px;">⏱️ ${diffMins} dkönce</span>`;
-                    // reservedBy = 'Ad Soyad — email@domain.com' formatında
-                    let [rbName, rbEmail] = req.reservedBy.split(' — ');
+                    let timerBadge = `<span style="font-size:10px; color:#e11d48; display:block; margin-top:2px;">⏱️ ${diffMins} dk</span>`;
+                    // reservedBy değerinden isim+email'i çıkar
+                    let staffList2 = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+                    let rbRaw = req.reservedBy || '';
+                    let rbName = rbRaw.split(' — ')[0];
+                    // İsim eşleşmesinden email bul
+                    let rbStaff = staffList2.find(s => s.name === rbName || rbRaw.includes(s.email));
+                    let rbEmail = rbStaff ? rbStaff.email : (rbRaw.includes('@') ? rbRaw.split(' — ')[1] : null);
+                    let rbDisplay = rbStaff ? rbStaff.name : rbName;
                     actionHtml = `
                         <div style="font-size:11px; font-weight:bold; color:#333;">İşlemde:</div>
-                        <div style="font-size:12px; color:#0052cc; font-weight:bold;">${rbName || req.reservedBy}</div>
-                        ${rbEmail ? `<div style="font-size:10px; color:#888;">${rbEmail}</div>` : ''}
+                        <div style="font-size:12px; color:#0052cc; font-weight:bold;">${rbDisplay}</div>
+                        <div style="font-size:10px; color:#888;">${rbEmail || '—'}</div>
                         ${timerBadge}
                     `;
                 } else if (isAdminPool) {
@@ -600,11 +606,16 @@ function renderWithdraws() {
                 let diffMins = req.reservedAt ? Math.floor((Date.now() - req.reservedAt) / 60000) : 0;
                 nameHtml = `<div style="font-weight:600; color:#888;">Başka Yetkilide</div>`;
                 ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#888; background:#f9f9f9;">Gizli</div>`;
-                let [rbName2, rbEmail2] = (req.reservedBy || '').split(' — ');
+                let staffList2b = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+                let rbRaw2 = req.reservedBy || '';
+                let rbName2 = rbRaw2.split(' — ')[0];
+                let rbStaff2 = staffList2b.find(s => s.name === rbName2 || rbRaw2.includes(s.email));
+                let rbEmail2 = rbStaff2 ? rbStaff2.email : (rbRaw2.includes('@') ? rbRaw2.split(' — ')[1] : null);
+                let rbDisplay2 = rbStaff2 ? rbStaff2.name : rbName2;
                 actionHtml = `
                     <div style="font-size:11px; font-weight:bold; color:#888;">İşlemde:</div>
-                    <div style="font-size:12px; color:#555; font-weight:bold;">${rbName2 || req.reservedBy}</div>
-                    ${rbEmail2 ? `<div style="font-size:10px; color:#aaa;">${rbEmail2}</div>` : ''}
+                    <div style="font-size:12px; color:#555; font-weight:bold;">${rbDisplay2}</div>
+                    <div style="font-size:10px; color:#aaa;">${rbEmail2 || '—'}</div>
                     <span style="font-size:10px; color:#e11d48;">⏱️ ${diffMins} dk</span>
                 `;
             } else {
