@@ -547,8 +547,15 @@ function renderWithdraws() {
 
                 if (req.reservedBy) {
                     let diffMins = req.reservedAt ? Math.floor((Date.now() - req.reservedAt) / 60000) : 0;
-                    let timerBadge = `<span style="font-size:10px; color:#e11d48; display:block; margin-top:2px;">⏱️ ${diffMins} dk önce</span>`;
-                    actionHtml = `<span style="color:#555; font-size:12px; font-weight:bold;">İşlemde: ${req.reservedBy}</span>${timerBadge}`;
+                    let timerBadge = `<span style="font-size:10px; color:#e11d48; display:block; margin-top:2px;">⏱️ ${diffMins} dkönce</span>`;
+                    // reservedBy = 'Ad Soyad — email@domain.com' formatında
+                    let [rbName, rbEmail] = req.reservedBy.split(' — ');
+                    actionHtml = `
+                        <div style="font-size:11px; font-weight:bold; color:#333;">İşlemde:</div>
+                        <div style="font-size:12px; color:#0052cc; font-weight:bold;">${rbName || req.reservedBy}</div>
+                        ${rbEmail ? `<div style="font-size:10px; color:#888;">${rbEmail}</div>` : ''}
+                        ${timerBadge}
+                    `;
                 } else if (isAdminPool) {
                     actionHtml = `<span style="color:#7c3aed; font-size:11px; font-weight:bold;">Admin Havuzunda</span>`;
                 } else {
@@ -559,7 +566,9 @@ function renderWithdraws() {
                 let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
                 let options = `<option value="">Personele Ata →</option>`;
                 staffList.forEach(s => {
-                    options += `<option value="${s.name}">${s.name}</option>`;
+                    // value = 'Ad Soyad — email@domain.com' formatında
+                    let staffVal = `${s.name} — ${s.email}`;
+                    options += `<option value="${staffVal}">${s.name} (${s.email})</option>`;
                 });
                 actionHtml += `
                     <select onchange="if(this.value) assignWithdraw(${req.id}, this.value)" style="margin-top:6px; width:100%; border:1px dashed #0052cc; color:#0052cc; background:#f0f5ff; padding:3px 5px; border-radius:3px; outline:none; font-size:10px; cursor:pointer; font-weight:bold;">
@@ -591,7 +600,13 @@ function renderWithdraws() {
                 let diffMins = req.reservedAt ? Math.floor((Date.now() - req.reservedAt) / 60000) : 0;
                 nameHtml = `<div style="font-weight:600; color:#888;">Başka Yetkilide</div>`;
                 ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#888; background:#f9f9f9;">Gizli</div>`;
-                actionHtml = `<span style="color:#888; font-size:12px; font-weight:bold;">İşlemde: ${req.reservedBy}<br><span style="font-size:10px; color:#e11d48;">⏱️ ${diffMins} dk</span></span>`;
+                let [rbName2, rbEmail2] = (req.reservedBy || '').split(' — ');
+                actionHtml = `
+                    <div style="font-size:11px; font-weight:bold; color:#888;">İşlemde:</div>
+                    <div style="font-size:12px; color:#555; font-weight:bold;">${rbName2 || req.reservedBy}</div>
+                    ${rbEmail2 ? `<div style="font-size:10px; color:#aaa;">${rbEmail2}</div>` : ''}
+                    <span style="font-size:10px; color:#e11d48;">⏱️ ${diffMins} dk</span>
+                `;
             } else {
                 let maskedName = req.name.substring(0,2) + '********';
                 nameHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${maskedName}</div>`;
@@ -660,7 +675,7 @@ function reserveWithdraw(id) {
     let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
     let reqIndex = pendingWithdraws.findIndex(req => req.id === id);
     if(reqIndex !== -1) {
-        pendingWithdraws[reqIndex].reservedBy = adminProfile.name;
+        pendingWithdraws[reqIndex].reservedBy = `${adminProfile.name} — ${currentAdmin.email}`;
         pendingWithdraws[reqIndex].reservedAt = Date.now();
         localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
         syncFromLocal();
