@@ -190,8 +190,13 @@ function syncFromLocal() {
     
     if(currentAdmin.role === 'super') {
         renderUsers();
+        renderRequests();
+        renderWithdraws(); // Admin tüm çekleri görür
+        renderBanks();
         if(typeof renderDepositHistory === 'function') renderDepositHistory();
         if(typeof renderWithdrawHistory === 'function') renderWithdrawHistory();
+        // 100k+ çekleri admin havuzuna otomatik çek
+        autoRouteHighValueWithdraws();
     }
     
     
@@ -514,8 +519,10 @@ function renderWithdraws() {
         
         pagedData.forEach(req => {
             
-            const isReservedByMe = req.reservedBy === adminProfile.name;
-            const isReservedByOther = req.reservedBy && req.reservedBy !== adminProfile.name;
+            const isSuperAdmin = currentAdmin && currentAdmin.role === 'super';
+            const isAdminPool = req.adminPool === true; // 100k+ admin havuzu
+            const isReservedByMe = !isSuperAdmin && req.reservedBy === adminProfile.name;
+            const isReservedByOther = req.reservedBy && !isSuperAdmin && req.reservedBy !== adminProfile.name;
 
             let nameHtml = '';
             let ibanHtml = '';
@@ -526,74 +533,74 @@ function renderWithdraws() {
             let waitMins = Math.floor((Date.now() - d.getTime()) / 60000);
             let dateStr = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
 
-            let formattedAmt = `<span style="color:#02b875; border:1px solid #02b875; padding:3px 8px; border-radius:3px; font-weight:600;">₺${req.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})}</span>`;
+            let amtColor = req.amount >= 100000 ? '#7c3aed' : '#02b875';
+            let amtBorder = req.amount >= 100000 ? '#7c3aed' : '#02b875';
+            let adminPoolBadge = isAdminPool ? `<span style="background:#7c3aed; color:#fff; font-size:9px; padding:2px 5px; border-radius:3px; margin-left:5px;">ADMİN HAVUZU</span>` : '';
+            let formattedAmt = `<span style="color:${amtColor}; border:1px solid ${amtBorder}; padding:3px 8px; border-radius:3px; font-weight:600;">₺${req.amount.toLocaleString('tr-TR', {minimumFractionDigits:2})}</span>${adminPoolBadge}`;
             let kaynakHtml = `<span style="color:#e11d48; border:1px solid #e11d48; padding:3px 8px; border-radius:3px; font-size:11px; font-weight:600;">MANUEL</span>`;
 
-            let asSuperAdmin = currentAdmin && currentAdmin.role === 'super';
-
-            if (isReservedByMe) {
-                // Fully visible
-                nameHtml = `<div style="display:inline-flex; align-items:center; gap:5px; border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name} <span style="cursor:pointer;" title="Kopyala">📋</span></div>`;
+            // ── SÜPER ADMİN GÖRÜNÜMÜ ──────────────────────────────
+            if (isSuperAdmin) {
+                // Admin her zaman tam bilgiyi görür
+                nameHtml = `<div style="display:inline-flex; align-items:center; gap:5px; border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name}</div>`;
                 ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:500;">${req.iban}</div>`;
-                
-                actionHtml = `
-                    <div style="display:flex; gap:5px; justify-content:center;">
-                        <button onclick="approveWithdraw(${req.id})" style="background:#fff; border:1px solid #02b875; color:#02b875; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Onayla
-                        </button>
-                        <button onclick="releaseWithdraw(${req.id})" style="background:#fff; border:1px solid #e11d48; color:#e11d48; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg> Havuza Bırak
-                        </button>
-                        <button onclick="rejectWithdraw(${req.id})" style="background:#e11d48; border:1px solid #e11d48; color:#fff; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px;" title="Talebi Reddet ve İade Et">İptal</button>
-                    </div>
-                `;
-            } else if (isReservedByOther) {
-                let timeText = '';
-                if (req.reservedAt) {
-                    let diffMins = Math.floor((Date.now() - req.reservedAt) / 60000);
-                    timeText = `<span style="font-size:10px; color:#e11d48; display:block; margin-top:2px;">⏱️ ${diffMins} dk önce</span>`;
+
+                if (req.reservedBy) {
+                    let diffMins = req.reservedAt ? Math.floor((Date.now() - req.reservedAt) / 60000) : 0;
+                    let timerBadge = `<span style="font-size:10px; color:#e11d48; display:block; margin-top:2px;">⏱️ ${diffMins} dk önce</span>`;
+                    actionHtml = `<span style="color:#555; font-size:12px; font-weight:bold;">İşlemde: ${req.reservedBy}</span>${timerBadge}`;
+                } else if (isAdminPool) {
+                    actionHtml = `<span style="color:#7c3aed; font-size:11px; font-weight:bold;">Admin Havuzunda</span>`;
+                } else {
+                    actionHtml = `<span style="color:#f39c12; font-size:11px; font-weight:bold;">Genel Havuzda</span>`;
                 }
 
-                if (asSuperAdmin) {
-                    nameHtml = `<div style="display:inline-flex; align-items:center; gap:5px; border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name}</div>`;
-                    ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#333;">${req.iban}</div>`;
-                } else {
-                    nameHtml = `<div style="font-weight:600; color:#888;">Başka Yetkilide</div>`;
-                    ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#888; background:#f9f9f9;">Gizli</div>`;
-                }
-                
-                actionHtml = `<span style="color:#888; font-size:12px; font-weight:bold;">İşlemde: ${req.reservedBy}</span>${timeText}`;
-            } else {
-                // Havuzda
-                if (asSuperAdmin) {
-                    nameHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name}</div>`;
-                    ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:500;">${req.iban}</div>`;
-                } else {
-                    let maskedName = req.name.substring(0,2) + '********';
-                    nameHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${maskedName}</div>`;
-                    ibanHtml = `<div style="color:#e11d48; border:1px solid #e11d48; padding:4px 10px; border-radius:4px; font-weight:500;">IBAN Gizli (Rezerve Et)</div>`;
-                }
-                
-                actionHtml = `
-                    <button onclick="openReserveConfirmModal(${req.id})" style="background:#fff; border:1px solid #f39c12; color:#f39c12; padding:5px 15px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px; margin:auto;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> İşleme Al
-                    </button>
-                `;
-            }
-
-            // ATAMA ARAYÜZÜ (SADECE SUPER ADMIN İÇİN)
-            if (asSuperAdmin && !isReservedByMe) {
+                // Atama dropdown — admin reserv edemez, sadece personele atayabilir
                 let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
-                let options = `<option value="">Personele Ata (İlet)</option>`;
+                let options = `<option value="">Personele Ata →</option>`;
                 staffList.forEach(s => {
-                    options += `<option value="${s.name}">${s.name} (${s.email})</option>`;
+                    options += `<option value="${s.name}">${s.name}</option>`;
                 });
-                let selectHtml = `
+                actionHtml += `
                     <select onchange="if(this.value) assignWithdraw(${req.id}, this.value)" style="margin-top:6px; width:100%; border:1px dashed #0052cc; color:#0052cc; background:#f0f5ff; padding:3px 5px; border-radius:3px; outline:none; font-size:10px; cursor:pointer; font-weight:bold;">
                         ${options}
                     </select>
+                    <button onclick="rejectWithdraw(${req.id})" style="margin-top:4px; width:100%; background:#e11d48; border:none; color:#fff; padding:4px 8px; border-radius:3px; font-weight:600; cursor:pointer; font-size:11px;">İptal / Red</button>
                 `;
-                actionHtml += selectHtml;
+
+            // ── PERSONEL GÖRÜNÜMÜ ──────────────────────────────
+            } else if (isAdminPool) {
+                // 100k+ çekler personele görünmez
+                return;
+
+            } else if (isReservedByMe) {
+                nameHtml = `<div style="display:inline-flex; align-items:center; gap:5px; border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${req.name} <span style="cursor:pointer;" onclick="navigator.clipboard.writeText('${req.name}')">📋</span></div>`;
+                ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:500;">${req.iban}</div>`;
+                actionHtml = `
+                    <div style="display:flex; gap:5px; justify-content:center;">
+                        <button onclick="approveWithdraw(${req.id})" style="background:#fff; border:1px solid #02b875; color:#02b875; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> Onayla
+                        </button>
+                        <button onclick="releaseWithdraw(${req.id})" style="background:#fff; border:1px solid #e11d48; color:#e11d48; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px;">
+                            Havuza Bırak
+                        </button>
+                        <button onclick="rejectWithdraw(${req.id})" style="background:#e11d48; border:none; color:#fff; padding:5px 10px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px;">İptal</button>
+                    </div>
+                `;
+            } else if (isReservedByOther) {
+                let diffMins = req.reservedAt ? Math.floor((Date.now() - req.reservedAt) / 60000) : 0;
+                nameHtml = `<div style="font-weight:600; color:#888;">Başka Yetkilide</div>`;
+                ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#888; background:#f9f9f9;">Gizli</div>`;
+                actionHtml = `<span style="color:#888; font-size:12px; font-weight:bold;">İşlemde: ${req.reservedBy}<br><span style="font-size:10px; color:#e11d48;">⏱️ ${diffMins} dk</span></span>`;
+            } else {
+                let maskedName = req.name.substring(0,2) + '********';
+                nameHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; font-weight:600;">${maskedName}</div>`;
+                ibanHtml = `<div style="color:#e11d48; border:1px solid #e11d48; padding:4px 10px; border-radius:4px; font-weight:500;">IBAN Gizli</div>`;
+                actionHtml = `
+                    <button onclick="openReserveConfirmModal(${req.id})" style="background:#fff; border:1px solid #f39c12; color:#f39c12; padding:5px 15px; border-radius:4px; font-weight:600; cursor:pointer; font-size:12px; margin:auto; display:flex; align-items:center; gap:3px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg> İşleme Al
+                    </button>
+                `;
             }
 
             html += `
@@ -614,6 +621,21 @@ function renderWithdraws() {
 
         });
         list.innerHTML = html;
+    }
+}
+
+// 100k+ çekleri admin havuzuna otomatik yönlendir
+function autoRouteHighValueWithdraws() {
+    let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
+    let changed = false;
+    pendingWithdraws.forEach(req => {
+        if (req.amount >= 100000 && !req.adminPool) {
+            req.adminPool = true;
+            changed = true;
+        }
+    });
+    if (changed) {
+        localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
     }
 }
 
