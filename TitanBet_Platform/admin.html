@@ -233,14 +233,22 @@
                         </div>
                         
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; font-size:13px; color:#6b778c;">
-                            <div>1 sayfadan 1. gösteriliyor (Toplam <span id="deposit-total-count">0</span> kayıt)</div>
+                            <div id="page-info-deposit">1 sayfadan 1. gösteriliyor (Toplam <span id="deposit-total-count">0</span> kayıt)</div>
                             <div style="display:flex; gap:5px; align-items:center;">
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">I&lt;</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&lt;</button>
-                                <button style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;I</button>
-                                <select style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none;"><option>100</option></select>
+                                <button id="btn-first-deposit" onclick="changePage('deposit', 'first')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">I&lt;</button>
+                                <button id="btn-prev-deposit" onclick="changePage('deposit', 'prev')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&lt;</button>
+                                <button id="btn-current-deposit" style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
+                                <button id="btn-next-deposit" onclick="changePage('deposit', 'next')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&gt;</button>
+                                <button id="btn-last-deposit" onclick="changePage('deposit', 'last')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&gt;I</button>
+                                <select id="select-limit-deposit" onchange="changePageLimit('deposit', this.value)" style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none; cursor:pointer;">
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100" selected>100</option>
+                                    <option value="200">200</option>
+                                    <option value="500">500</option>
+                                    <option value="1000">1000</option>
+                                    <option value="5000">5000</option>
+                                </select>
                                 <span style="margin-left:5px;">items per page</span>
                             </div>
                         </div>
@@ -298,14 +306,22 @@
                         </div>
                         
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; font-size:13px; color:#6b778c;">
-                            <div>1 sayfadan 1. gösteriliyor (Toplam <span id="withdraw-total-count">0</span> kayıt)</div>
+                            <div id="page-info-withdraw">1 sayfadan 1. gösteriliyor (Toplam <span id="withdraw-total-count">0</span> kayıt)</div>
                             <div style="display:flex; gap:5px; align-items:center;">
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">I&lt;</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&lt;</button>
-                                <button style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;I</button>
-                                <select style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none;"><option>100</option></select>
+                                <button id="btn-first-withdraw" onclick="changePage('withdraw', 'first')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">I&lt;</button>
+                                <button id="btn-prev-withdraw" onclick="changePage('withdraw', 'prev')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&lt;</button>
+                                <button id="btn-current-withdraw" style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
+                                <button id="btn-next-withdraw" onclick="changePage('withdraw', 'next')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&gt;</button>
+                                <button id="btn-last-withdraw" onclick="changePage('withdraw', 'last')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&gt;I</button>
+                                <select id="select-limit-withdraw" onchange="changePageLimit('withdraw', this.value)" style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none; cursor:pointer;">
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100" selected>100</option>
+                                    <option value="200">200</option>
+                                    <option value="500">500</option>
+                                    <option value="1000">1000</option>
+                                    <option value="5000">5000</option>
+                                </select>
                                 <span style="margin-left:5px;">items per page</span>
                             </div>
                         </div>
@@ -376,14 +392,22 @@
                         </div>
                         
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; font-size:13px; color:#6b778c;">
-                            <div>1 sayfadan 1. gösteriliyor (Toplam <span id="deposit-history-total-count">0</span> kayıt)</div>
+                            <div id="page-info-deposit-history">1 sayfadan 1. gösteriliyor (Toplam <span id="deposit-history-total-count">0</span> kayıt)</div>
                             <div style="display:flex; gap:5px; align-items:center;">
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">I&lt;</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&lt;</button>
-                                <button style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;I</button>
-                                <select style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none;"><option>100</option></select>
+                                <button id="btn-first-deposit-history" onclick="changePage('deposit-history', 'first')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">I&lt;</button>
+                                <button id="btn-prev-deposit-history" onclick="changePage('deposit-history', 'prev')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&lt;</button>
+                                <button id="btn-current-deposit-history" style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
+                                <button id="btn-next-deposit-history" onclick="changePage('deposit-history', 'next')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&gt;</button>
+                                <button id="btn-last-deposit-history" onclick="changePage('deposit-history', 'last')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&gt;I</button>
+                                <select id="select-limit-deposit-history" onchange="changePageLimit('deposit-history', this.value)" style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none; cursor:pointer;">
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100" selected>100</option>
+                                    <option value="200">200</option>
+                                    <option value="500">500</option>
+                                    <option value="1000">1000</option>
+                                    <option value="5000">5000</option>
+                                </select>
                                 <span style="margin-left:5px;">items per page</span>
                             </div>
                         </div>
@@ -447,14 +471,22 @@
                         </div>
                         
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; font-size:13px; color:#6b778c;">
-                            <div>1 sayfadan 1. gösteriliyor (Toplam <span id="withdraw-history-total-count">0</span> kayıt)</div>
+                            <div id="page-info-withdraw-history">1 sayfadan 1. gösteriliyor (Toplam <span id="withdraw-history-total-count">0</span> kayıt)</div>
                             <div style="display:flex; gap:5px; align-items:center;">
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">I&lt;</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&lt;</button>
-                                <button style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;</button>
-                                <button style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;">&gt;I</button>
-                                <select style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none;"><option>100</option></select>
+                                <button id="btn-first-withdraw-history" onclick="changePage('withdraw-history', 'first')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">I&lt;</button>
+                                <button id="btn-prev-withdraw-history" onclick="changePage('withdraw-history', 'prev')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&lt;</button>
+                                <button id="btn-current-withdraw-history" style="background:#deebff; border:none; color:#0052cc; padding:6px 12px; border-radius:3px; font-weight:bold;">1</button>
+                                <button id="btn-next-withdraw-history" onclick="changePage('withdraw-history', 'next')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&gt;</button>
+                                <button id="btn-last-withdraw-history" onclick="changePage('withdraw-history', 'last')" style="border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;">&gt;I</button>
+                                <select id="select-limit-withdraw-history" onchange="changePageLimit('withdraw-history', this.value)" style="margin-left:15px; padding:4px 8px; border:1px solid #dfe1e6; border-radius:3px; color:#172b4d; outline:none; cursor:pointer;">
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100" selected>100</option>
+                                    <option value="200">200</option>
+                                    <option value="500">500</option>
+                                    <option value="1000">1000</option>
+                                    <option value="5000">5000</option>
+                                </select>
                                 <span style="margin-left:5px;">items per page</span>
                             </div>
                         </div>

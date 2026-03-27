@@ -14,6 +14,80 @@ let dashboardChart = null; // Chart.js instance
 // SÜPER ADMIN SABİT BİLGİSİ
 const SUPER_ADMIN = { email: 'admin@volt.bet', pass: '123456', role: 'super', name: 'Kurucu Müdür' };
 
+// --- PAGINATION STATE ---
+let paginationState = {
+    'deposit': { page: 1, limit: 100 },
+    'withdraw': { page: 1, limit: 100 },
+    'deposit-history': { page: 1, limit: 100 },
+    'withdraw-history': { page: 1, limit: 100 }
+};
+
+window.changePageLimit = function(tableId, newLimit) {
+    if (paginationState[tableId]) {
+        paginationState[tableId].limit = parseInt(newLimit);
+        paginationState[tableId].page = 1;
+        triggerRender(tableId);
+    }
+};
+
+window.changePage = function(tableId, action) {
+    let state = paginationState[tableId];
+    if (!state) return;
+    if (action === 'first') state.page = 1;
+    if (action === 'prev' && state.page > 1) state.page--;
+    if (action === 'next' && state.page < state.maxPage) state.page++;
+    if (action === 'last' && state.maxPage > 0) state.page = state.maxPage;
+    triggerRender(tableId);
+};
+
+window.triggerRender = function(tableId) {
+    if (tableId === 'deposit') renderRequests();
+    if (tableId === 'withdraw') renderWithdraws();
+    if (tableId === 'deposit-history') renderDepositHistory();
+    if (tableId === 'withdraw-history') renderWithdrawHistory();
+};
+
+window.updatePaginationUI = function(tableId, totalItems) {
+    let state = paginationState[tableId];
+    if (!state) return;
+    let limit = state.limit;
+    let maxPage = Math.ceil(totalItems / limit) || 1;
+    state.maxPage = maxPage;
+    
+    if (state.page > maxPage) state.page = maxPage;
+    
+    const pageInfo = document.getElementById(`page-info-${tableId}`);
+    if (pageInfo) {
+        if (totalItems === 0) {
+            pageInfo.innerHTML = `1 sayfadan 1. gösteriliyor (Toplam <span id="${tableId}-total-count">0</span> kayıt)`;
+        } else {
+            let startItem = (state.page - 1) * limit + 1;
+            let endItem = Math.min(state.page * limit, totalItems);
+            pageInfo.innerHTML = `${maxPage} sayfadan ${state.page}. gösteriliyor (${startItem}-${endItem} arası) (Toplam <span id="${tableId}-total-count">${totalItems}</span> kayıt)`;
+        }
+    }
+    
+    ['first', 'prev', 'next', 'last'].forEach(action => {
+        let btn = document.getElementById(`btn-${action}-${tableId}`);
+        if (btn) {
+            let isDisabled = false;
+            if ((action === 'first' || action === 'prev') && state.page === 1) isDisabled = true;
+            if ((action === 'last' || action === 'next') && state.page === maxPage) isDisabled = true;
+            
+            if (isDisabled) {
+                btn.style.cssText = "border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#a5adba; cursor:not-allowed;";
+                btn.disabled = true;
+            } else {
+                btn.style.cssText = "border:1px solid #dfe1e6; background:#fff; padding:4px 10px; border-radius:3px; color:#555; cursor:pointer;";
+                btn.disabled = false;
+            }
+        }
+    });
+    
+    let btnCurrent = document.getElementById(`btn-current-${tableId}`);
+    if (btnCurrent) btnCurrent.innerText = state.page;
+};
+
 // ── CORE SYNC ENGINE ────────────────────────────
 function syncFromLocal() {
     if(!currentAdmin) return; // Çıkış yapıldıysa durdur
@@ -254,9 +328,8 @@ function renderDashboardChart(deps, wits) {
 function renderRequests() {
     const list = document.getElementById('requests-list');
     const badge = document.getElementById('deposit-count-badge');
-    const totalCountSpan = document.getElementById('deposit-total-count');
     
-    if (totalCountSpan) totalCountSpan.innerText = pendingDeposit ? '1' : '0';
+    updatePaginationUI('deposit', pendingDeposit ? 1 : 0);
     
     if (!pendingDeposit) {
         list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Bekleyen yatırım talebi bulunamadı.</td></tr>';
@@ -413,11 +486,9 @@ function confirmApproveDeposit() {
 function renderWithdraws() {
     const list = document.getElementById('withdraw-requests-list-body');
     const badge = document.getElementById('withdraw-count-badge');
-    const totalCountSpan = document.getElementById('withdraw-total-count');
     
     let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
-    
-    if (totalCountSpan) totalCountSpan.innerText = pendingWithdraws.length;
+    updatePaginationUI('withdraw', pendingWithdraws.length);
 
     if (pendingWithdraws.length === 0) {
         if(list) list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Bekleyen çekim talebi bulunamadı.</td></tr>';
@@ -435,7 +506,13 @@ function renderWithdraws() {
     
     if(list) {
         let html = '';
-        pendingWithdraws.forEach(req => {
+        
+        let state = paginationState['withdraw'];
+        let startIndex = (state.page - 1) * state.limit;
+        let endIndex = startIndex + state.limit;
+        let pagedData = pendingWithdraws.slice(startIndex, endIndex);
+        
+        pagedData.forEach(req => {
             
             const isReservedByMe = req.reservedBy === adminProfile.name;
             const isReservedByOther = req.reservedBy && req.reservedBy !== adminProfile.name;
@@ -1217,11 +1294,9 @@ function saveToWithdrawHistory(req, status) {
 
 function renderDepositHistory() {
     const list = document.getElementById('deposit-history-list');
-    const badge = document.getElementById('deposit-count-badge'); // Not for history really
-    const totalCountSpan = document.getElementById('deposit-history-total-count');
     
     let history = JSON.parse(localStorage.getItem('tb_deposit_history') || '[]');
-    if(totalCountSpan) totalCountSpan.innerText = history.length;
+    updatePaginationUI('deposit-history', history.length);
     
     if(history.length === 0) {
         if(list) list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Geçmiş yatırım talebi bulunamadı.</td></tr>';
@@ -1230,7 +1305,13 @@ function renderDepositHistory() {
     
     if(list) {
         let html = '';
-        history.forEach(req => {
+        
+        let state = paginationState['deposit-history'];
+        let startIndex = (state.page - 1) * state.limit;
+        let endIndex = startIndex + state.limit;
+        let pagedData = history.slice(startIndex, endIndex);
+        
+        pagedData.forEach(req => {
             const uName = req.userName || 'Bilinmiyor';
             const username = req.userEmail ? req.userEmail.split('@')[0] : '-';
             const bankInfo = activeBanks.find(b => b.name === req.bank);
@@ -1266,10 +1347,9 @@ function renderDepositHistory() {
 
 function renderWithdrawHistory() {
     const list = document.getElementById('withdraw-history-list-body');
-    const totalCountSpan = document.getElementById('withdraw-history-total-count');
     
     let history = JSON.parse(localStorage.getItem('tb_withdraw_history') || '[]');
-    if(totalCountSpan) totalCountSpan.innerText = history.length;
+    updatePaginationUI('withdraw-history', history.length);
     
     if(history.length === 0) {
         if(list) list.innerHTML = '<tr><td colspan="9" style="padding:20px; color:#888;">Geçmiş çekim talebi bulunamadı.</td></tr>';
@@ -1278,7 +1358,13 @@ function renderWithdrawHistory() {
     
     if(list) {
         let html = '';
-        history.forEach(req => {
+        
+        let state = paginationState['withdraw-history'];
+        let startIndex = (state.page - 1) * state.limit;
+        let endIndex = startIndex + state.limit;
+        let pagedData = history.slice(startIndex, endIndex);
+        
+        pagedData.forEach(req => {
             let d = new Date(req.processedDate || Date.now());
             const dateStr = d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
             
