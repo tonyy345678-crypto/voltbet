@@ -35,7 +35,9 @@
     <!-- 2FA SETUP OVERLAY (FORCED) -->
     <div id="admin-2fa-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,14,20,0.95); z-index:99998; justify-content:center; align-items:center;">
         <div style="background:#111820; border:1px solid #1e2a38; border-radius:10px; padding:40px; width:500px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
-            <div style="font-size:40px; margin-bottom:10px;">🛡️</div>
+            <div style="margin-bottom:15px; color:#1fcc5a;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </div>
             <h2 style="color:#1fcc5a; font-size:24px; margin-bottom:10px;">Zorunlu 2FA Doğrulaması</h2>
             <p style="color:#aaa; font-size:14px; margin-bottom:20px; line-height:1.5;">Hesabınızın güvenliği nedeniyle sisteme erişmeden önce mutlaka <b>Google Authenticator (2FA)</b> kurmanız gerekmektedir.</p>
             
@@ -63,25 +65,78 @@
                 </div>
             </div>
             <nav id="admin-nav-menu">
-                <div class="nav-btn active" onclick="showTab('dashboard')" id="nav-dashboard">📊 Dashboard</div>
+                <div class="nav-btn active" onclick="showTab('dashboard')" id="nav-dashboard">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> 
+                        Dashboard
+                    </div>
+                </div>
                 
                 <!-- Personel Göreceği Menüler -->
-                <div class="nav-btn" onclick="showTab('deposits')" id="nav-deposits" style="display:none;">💰 Yatırım Talepleri <span id="deposit-count-badge" class="badge">0</span></div>
-                <div class="nav-btn" onclick="showTab('deposit-history')" id="nav-deposit-history" style="display:none; color:#888; font-size:12px; margin-left:10px;">└ Onaylanan/Red Yatırımlar</div>
+                <div class="nav-btn" onclick="showTab('deposits')" id="nav-deposits" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12 12 16 16 12"></polyline><line x1="12" y1="8" x2="12" y2="16"></line></svg> 
+                        Yatırım Talepleri
+                    </div>
+                    <span id="deposit-count-badge" class="badge">0</span>
+                </div>
+                <div class="nav-btn" onclick="showTab('deposit-history')" id="nav-deposit-history" style="display:none; color:#888; font-size:12px; margin-left:15px; padding: 10px 30px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Onaylanan/Red Yatırımlar
+                    </div>
+                </div>
                 
-                <div class="nav-btn" onclick="showTab('withdraws')" id="nav-withdraws" style="display:none;">💸 Çekim Talepleri <span id="withdraw-count-badge" class="badge">0</span></div>
-                <div class="nav-btn" onclick="showTab('withdraw-history')" id="nav-withdraw-history" style="display:none; color:#888; font-size:12px; margin-left:10px;">└ Onaylanan/Red Çekimler</div>
+                <div class="nav-btn" onclick="showTab('withdraws')" id="nav-withdraws" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line></svg> 
+                        Çekim Talepleri 
+                    </div>
+                    <span id="withdraw-count-badge" class="badge">0</span>
+                </div>
+                <div class="nav-btn" onclick="showTab('withdraw-history')" id="nav-withdraw-history" style="display:none; color:#888; font-size:12px; margin-left:15px; padding: 10px 30px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Onaylanan/Red Çekimler
+                    </div>
+                </div>
                 
-                <div class="nav-btn" onclick="showTab('banks')" id="nav-banks" style="display:none;">🏦 Banka Hesapları</div>
+                <div class="nav-btn" onclick="showTab('banks')" id="nav-banks" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="21" width="18" height="2"></rect><path d="M12 3L2 10h20Z"></path><path d="M6 10v11M10 10v11M14 10v11M18 10v11"></path></svg> 
+                        Banka Hesapları
+                    </div>
+                </div>
                 
                 <!-- Destek Departmanı Göreceği Menü (Ayrı Kurulacak Dediği İçin Bunları Ayıracağız) -->
-                <div class="nav-btn" onclick="showTab('support')" id="nav-support" style="display:none;">💬 Canlı Destek <span id="chat-count-badge" class="badge" style="display:none; background:#ff4444; color:#fff; padding:2px 6px; border-radius:10px; font-size:10px; margin-left:5px;">!</span></div>
+                <div class="nav-btn" onclick="showTab('support')" id="nav-support" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> 
+                        Canlı Destek 
+                    </div>
+                    <span id="chat-count-badge" class="badge" style="display:none; background:#ff4444; color:#fff; padding:2px 6px; border-radius:10px; font-size:10px; margin-left:5px;">!</span>
+                </div>
                 
                 <!-- Sadece Süper Admin Göreceği Menüler -->
-                <div class="nav-btn" onclick="showTab('users')" id="nav-users" style="display:none;">👥 Oyuncu Yönetimi</div>
-                <div class="nav-btn" onclick="showTab('staff')" id="nav-staff" style="display:none; color:#1fcc5a;">👨‍💼 Personel Yönetimi</div>
+                <div class="nav-btn" onclick="showTab('users')" id="nav-users" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> 
+                        Oyuncu Yönetimi
+                    </div>
+                </div>
+                <div class="nav-btn" onclick="showTab('staff')" id="nav-staff" style="display:none; color:#1fcc5a;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> 
+                        Personel Yönetimi
+                    </div>
+                </div>
                 
-                <div class="nav-btn" onclick="showTab('settings')" id="nav-settings">⚙️ Profil Ayarları</div>
+                <div class="nav-btn" onclick="showTab('settings')" id="nav-settings">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> 
+                        Profil Ayarları
+                    </div>
+                </div>
             </nav>
             <div class="sidebar-footer">
                 <div style="font-size:10px; color:#666;">OTURUM:</div>
@@ -116,7 +171,9 @@
                     
                     <!-- Card 1: Toplam Yatırım -->
                     <div style="background:#fff; border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border-top:4px solid #02b875; position:relative; overflow:hidden;">
-                        <div style="position:absolute; right:-15px; top:-15px; font-size:80px; opacity:0.04; pointer-events:none;">💰</div>
+                        <div style="position:absolute; right:-15px; top:-15px; width:120px; height:120px; color:#02b875; opacity:0.1; pointer-events:none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%;"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12 12 16 16 12"></polyline><line x1="12" y1="8" x2="12" y2="16"></line></svg>
+                        </div>
                         <h4 style="color:#555; margin:0 0 5px 0; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Toplam Yatırım</h4>
                         <div id="dash-date-1" style="font-size:11px; color:#aaa; margin-bottom:15px;">-</div>
                         <div id="dash-val-dep" style="font-size:26px; font-weight:800; color:#02b875; margin-bottom:15px;">0,00 ₺</div>
@@ -128,7 +185,9 @@
 
                     <!-- Card 2: Toplam Çekim -->
                     <div style="background:#fff; border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border-top:4px solid #e11d48; position:relative; overflow:hidden;">
-                        <div style="position:absolute; right:-15px; top:-15px; font-size:80px; opacity:0.04; pointer-events:none;">💸</div>
+                        <div style="position:absolute; right:-15px; top:-15px; width:120px; height:120px; color:#e11d48; opacity:0.1; pointer-events:none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%;"><circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line></svg>
+                        </div>
                         <h4 style="color:#555; margin:0 0 5px 0; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Toplam Çekim</h4>
                         <div id="dash-date-2" style="font-size:11px; color:#aaa; margin-bottom:15px;">-</div>
                         <div id="dash-val-wit" style="font-size:26px; font-weight:800; color:#e11d48; margin-bottom:15px;">0,00 ₺</div>
@@ -153,7 +212,9 @@
 
                     <!-- Card 4: Güncel Kasa -->
                     <div style="background:linear-gradient(135deg, #fff 60%, #f0f4ff 100%); border-radius:10px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.03); border-top:4px solid #0056b3; position:relative; overflow:hidden;">
-                        <div style="position:absolute; right:-10px; top:-5px; font-size:80px; opacity:0.04; pointer-events:none;">🏦</div>
+                        <div style="position:absolute; right:-10px; top:-10px; width:120px; height:120px; color:#0056b3; opacity:0.1; pointer-events:none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%;"><rect x="3" y="21" width="18" height="2"></rect><path d="M12 3L2 10h20Z"></path><path d="M6 10v11M10 10v11M14 10v11M18 10v11"></path></svg>
+                        </div>
                         <h4 style="color:#555; margin:0 0 5px 0; font-size:14px; text-transform:uppercase; letter-spacing:1px;">Güncel Kasa (Net)</h4>
                         <div id="dash-date-4" style="font-size:11px; color:#aaa; margin-bottom:25px;">-</div>
                         <div id="dash-val-net" style="font-size:32px; font-weight:900; color:#0056b3; margin-bottom:5px; text-shadow:0 2px 10px rgba(0,86,179,0.1);">0,00 ₺</div>
