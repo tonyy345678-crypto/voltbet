@@ -521,8 +521,8 @@ function renderWithdraws() {
             
             const isSuperAdmin = currentAdmin && currentAdmin.role === 'super';
             const isAdminPool = req.adminPool === true; // 100k+ admin havuzu
-            const isReservedByMe = !isSuperAdmin && req.reservedBy === adminProfile.name;
-            const isReservedByOther = req.reservedBy && !isSuperAdmin && req.reservedBy !== adminProfile.name;
+            const isReservedByMe = !isSuperAdmin && req.reservedBy === currentAdmin.email;
+            const isReservedByOther = req.reservedBy && !isSuperAdmin && req.reservedBy !== currentAdmin.email;
 
             let nameHtml = '';
             let ibanHtml = '';
@@ -547,20 +547,16 @@ function renderWithdraws() {
 
                 if (req.reservedBy) {
                     let diffMins = req.reservedAt ? Math.floor((Date.now() - req.reservedAt) / 60000) : 0;
-                    let timerBadge = `<span style="font-size:10px; color:#e11d48; display:block; margin-top:2px;">⏱️ ${diffMins} dk</span>`;
-                    // reservedBy değerinden isim+email'i çıkar
+                    // reservedBy = direkt email adresi
                     let staffList2 = JSON.parse(localStorage.getItem('tb_staff') || '[]');
-                    let rbRaw = req.reservedBy || '';
-                    let rbName = rbRaw.split(' — ')[0];
-                    // İsim eşleşmesinden email bul
-                    let rbStaff = staffList2.find(s => s.name === rbName || rbRaw.includes(s.email));
-                    let rbEmail = rbStaff ? rbStaff.email : (rbRaw.includes('@') ? rbRaw.split(' — ')[1] : null);
-                    let rbDisplay = rbStaff ? rbStaff.name : rbName;
+                    let rbEmail = req.reservedBy; // email şekilde kaydediliyor
+                    let rbStaff = staffList2.find(s => s.email === rbEmail);
+                    let rbDisplay = rbStaff ? rbStaff.name : rbEmail;
                     actionHtml = `
                         <div style="font-size:11px; font-weight:bold; color:#333;">İşlemde:</div>
                         <div style="font-size:12px; color:#0052cc; font-weight:bold;">${rbDisplay}</div>
-                        <div style="font-size:10px; color:#888;">${rbEmail || '—'}</div>
-                        ${timerBadge}
+                        <div style="font-size:10px; color:#888;">${rbEmail}</div>
+                        <span style="font-size:10px; color:#e11d48; display:block;">⏱️ ${diffMins} dk</span>
                     `;
                 } else if (isAdminPool) {
                     actionHtml = `<span style="color:#7c3aed; font-size:11px; font-weight:bold;">Admin Havuzunda</span>`;
@@ -607,15 +603,13 @@ function renderWithdraws() {
                 nameHtml = `<div style="font-weight:600; color:#888;">Başka Yetkilide</div>`;
                 ibanHtml = `<div style="border:1px solid #ddd; padding:4px 10px; border-radius:4px; color:#888; background:#f9f9f9;">Gizli</div>`;
                 let staffList2b = JSON.parse(localStorage.getItem('tb_staff') || '[]');
-                let rbRaw2 = req.reservedBy || '';
-                let rbName2 = rbRaw2.split(' — ')[0];
-                let rbStaff2 = staffList2b.find(s => s.name === rbName2 || rbRaw2.includes(s.email));
-                let rbEmail2 = rbStaff2 ? rbStaff2.email : (rbRaw2.includes('@') ? rbRaw2.split(' — ')[1] : null);
-                let rbDisplay2 = rbStaff2 ? rbStaff2.name : rbName2;
+                let rbEmail2 = req.reservedBy; // email şekilde kaydediliyor
+                let rbStaff2 = staffList2b.find(s => s.email === rbEmail2);
+                let rbDisplay2 = rbStaff2 ? rbStaff2.name : rbEmail2;
                 actionHtml = `
                     <div style="font-size:11px; font-weight:bold; color:#888;">İşlemde:</div>
                     <div style="font-size:12px; color:#555; font-weight:bold;">${rbDisplay2}</div>
-                    <div style="font-size:10px; color:#aaa;">${rbEmail2 || '—'}</div>
+                    <div style="font-size:10px; color:#aaa;">${rbEmail2}</div>
                     <span style="font-size:10px; color:#e11d48;">⏱️ ${diffMins} dk</span>
                 `;
             } else {
@@ -686,7 +680,7 @@ function reserveWithdraw(id) {
     let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
     let reqIndex = pendingWithdraws.findIndex(req => req.id === id);
     if(reqIndex !== -1) {
-        pendingWithdraws[reqIndex].reservedBy = `${adminProfile.name} — ${currentAdmin.email}`;
+        pendingWithdraws[reqIndex].reservedBy = currentAdmin.email; // email olarak kaydet
         pendingWithdraws[reqIndex].reservedAt = Date.now();
         localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
         syncFromLocal();
@@ -704,13 +698,16 @@ function releaseWithdraw(id) {
     }
 }
 
-window.assignWithdraw = function(id, staffName) {
-    if (!staffName) return;
+window.assignWithdraw = function(id, staffVal) {
+    if (!staffVal) return;
+    // staffVal = 'Ad Soyad — email@domain.com' formatında olabilir, sadece email'i al
+    let email = staffVal.includes(' — ') ? staffVal.split(' — ')[1].trim() : staffVal.trim();
     let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
     let reqIndex = pendingWithdraws.findIndex(req => req.id === id);
     if(reqIndex !== -1) {
-        pendingWithdraws[reqIndex].reservedBy = staffName;
+        pendingWithdraws[reqIndex].reservedBy = email; // sadece email kaydet
         pendingWithdraws[reqIndex].reservedAt = Date.now();
+        pendingWithdraws[reqIndex].adminPool = false; // admin havuzundan çık
         localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
         syncFromLocal();
     }
