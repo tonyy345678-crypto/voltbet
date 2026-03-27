@@ -948,11 +948,11 @@ function initAdminPanel() {
         // Super Admin
         if(document.getElementById('nav-staff')) document.getElementById('nav-staff').style.display = 'block';
         if(document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'block';
-        if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'none';
-        if(document.getElementById('nav-deposit-history')) document.getElementById('nav-deposit-history').style.display = 'none';
-        if(document.getElementById('nav-withdraws')) document.getElementById('nav-withdraws').style.display = 'none';
-        if(document.getElementById('nav-withdraw-history')) document.getElementById('nav-withdraw-history').style.display = 'none';
-        if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'none';
+        if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'block';
+        if(document.getElementById('nav-deposit-history')) document.getElementById('nav-deposit-history').style.display = 'block';
+        if(document.getElementById('nav-withdraws')) document.getElementById('nav-withdraws').style.display = 'block';
+        if(document.getElementById('nav-withdraw-history')) document.getElementById('nav-withdraw-history').style.display = 'block';
+        if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'block';
         if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'block';
         
         if(document.getElementById('top-kasa-widget')) document.getElementById('top-kasa-widget').style.display = 'flex';
