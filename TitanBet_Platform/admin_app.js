@@ -998,6 +998,12 @@ function initAdminPanel() {
     document.getElementById('admin-login-overlay').style.display = 'none';
     document.getElementById('admin-main-wrapper').style.display = 'flex';
     
+    // adminProfile'ı her zaman currentAdmin ile güncelle ("Admin" değil, gerçek isim)
+    adminProfile = {
+        name: currentAdmin.name,
+        char: (currentAdmin.name || 'A').charAt(0).toUpperCase()
+    };
+    
     // ROL BAZLI ARAYÜZ AYARLARI
     if(currentAdmin.role === 'super') {
         // Super Admin
@@ -1010,7 +1016,7 @@ function initAdminPanel() {
         if(document.getElementById('nav-banks')) document.getElementById('nav-banks').style.display = 'block';
         if(document.getElementById('nav-support')) document.getElementById('nav-support').style.display = 'block';
         
-        if(document.getElementById('top-kasa-widget')) document.getElementById('top-kasa-widget').style.display = 'flex';
+        if(document.getElementById('top-kasa-widget')) document.getElementById('top-kasa-widget').style.display = 'none';
         if(document.getElementById('admin-display-name-input')) document.getElementById('admin-display-name-input').value = currentAdmin.name;
     } else {
         // Personel (Sub)
