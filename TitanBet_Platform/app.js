@@ -565,18 +565,86 @@ setInterval(syncFromLocal, 1000);
 
 // ── RENDER LANDING GAME GRID ──────────────────────────
 const GAMES = [
-    { symbol:'vs20fruitsw',    name:'Sweet Bonanza',       badge:'HOT',  badgeColor:'#ff3b3b', textColor:'#fff' },
-    { symbol:'vs20gateslightning', name:'Gates of Olympus', badge:'TOP', badgeColor:'#ffcc00', textColor:'#000' },
-    { symbol:'vs20starlight',  name:'Starlight Princess',  badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
-    { symbol:'vs10bbbonanza',  name:'Big Bass Bonanza',    badge:'',     badgeColor:'',        textColor:'' },
-    { symbol:'vs25wolfgold',   name:'Wolf Gold',           badge:'',     badgeColor:'',        textColor:'' },
-    { symbol:'vs25doghouse',   name:'The Dog House',       badge:'',     badgeColor:'',        textColor:'' },
-    { symbol:'vs20fruitparty', name:'Fruit Party',         badge:'',     badgeColor:'',        textColor:'' },
-    { symbol:'vs40wildwest',   name:'Wild West Gold',      badge:'',     badgeColor:'',        textColor:'' },
-    { symbol:'vs5jokers',      name:'Joker Jewels',        badge:'',     badgeColor:'',        textColor:'' },
-    { symbol:'vs20gemsbonanza',name:'Gems Bonanza',        badge:'',     badgeColor:'',        textColor:'' },
-    { symbol:'vs5aztecgems',   name:'Aztec Gems',          badge:'',     badgeColor:'',        textColor:'' },
-    { symbol:'vs20xmascarol',  name:'Sweet Bonanza Xmas',  badge:'',     badgeColor:'',        textColor:'' },
+    // ── HOT & TOP ──
+    { symbol:'vs20fruitsw',        name:'Sweet Bonanza',            badge:'HOT',  badgeColor:'#ff3b3b', textColor:'#fff' },
+    { symbol:'vs20gateslightning', name:'Gates of Olympus',         badge:'TOP',  badgeColor:'#ffcc00', textColor:'#000' },
+    { symbol:'vs20starlight',      name:'Starlight Princess',       badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+    { symbol:'vs20sugarrush',      name:'Sugar Rush',               badge:'HOT',  badgeColor:'#ff3b3b', textColor:'#fff' },
+    { symbol:'vs20gatesoly1000',   name:'Gates of Olympus 1000',    badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+    { symbol:'vs20sl1000',         name:'Starlight Princess 1000',  badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+    { symbol:'vs20sugarrush1000',  name:'Sugar Rush 1000',          badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+    { symbol:'vs20sb1000',         name:'Sweet Bonanza 1000',       badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+
+    // ── DROPS & WINS ──
+    { symbol:'vs10bbbonanza',      name:'Big Bass Bonanza',         badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs10bhallbnza',      name:'Big Bass Bonanza Bonanza', badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs10bigbasshold',    name:'Big Bass Hold & Spin',     badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs10fishingreelsbigbass', name:'Big Bass Fishing Reels', badge:'', badgeColor:'', textColor:'' },
+    { symbol:'vs10txbigbass',      name:'Big Bass Splash',          badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs10bigbassamaz',    name:'Big Bass Amazon Xtreme',   badge:'TOP',  badgeColor:'#ffcc00', textColor:'#000' },
+    { symbol:'vs25wolfgold',       name:'Wolf Gold',                badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25doghouse',       name:'The Dog House',            badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25doghousemegaways', name:'Dog House Megaways',     badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20fruitparty',     name:'Fruit Party',              badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20fruitparty2',    name:'Fruit Party 2',            badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs40wildwest',       name:'Wild West Gold',           badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20wildwestgold2',  name:'Wild West Gold 2 Megaways',badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+    { symbol:'vs20gemsbonanza',    name:'Gems Bonanza',             badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs5aztecgems',       name:'Aztec Gems',               badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs5aztecgemsdeluxe', name:'Aztec Gems Deluxe',        badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20xmascarol',      name:'Sweet Bonanza Xmas',       badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20jokerking',      name:'Joker King',               badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs5jokers',          name:'Joker Jewels',             badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20goldrush',       name:'Gold Rush',                badge:'',     badgeColor:'', textColor:'' },
+
+    // ── MEGAWAYS ──
+    { symbol:'vs20aztecbon',       name:'Aztec Bonanza',            badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs243fortsafari',    name:'Great Rhino Megaways',     badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs117649starburst',  name:'Release the Kraken Megaways', badge:'', badgeColor:'', textColor:'' },
+    { symbol:'vs20starlightx',     name:'Starlight Christmas',      badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vswayshive',         name:'Beehive Bedlam Megaways',  badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vswaysbufking',      name:'Buffalo King Megaways',    badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vswayslightning',    name:'Lightning Joker',          badge:'',     badgeColor:'', textColor:'' },
+
+    // ── JACKPOT / HIGH RTP ──
+    { symbol:'vs20rhino',          name:'Great Rhino',              badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20rhinodeluxe',    name:'Great Rhino Deluxe',       badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25goldpanther',    name:'Panther Queen',            badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25mustanggold',    name:'Mustang Gold',             badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs1fortuneofgiza',   name:'Fortune of Giza',          badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20chickchase',     name:'Chilli Heat Megaways',     badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20chilliheat',     name:'Chilli Heat',              badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20cleocatra',      name:'Cleo Cleopatra',           badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20cleopatra',      name:'Cleopatra\'s Gold',        badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20tutancamun',     name:'Eye of Cleopatra',         badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs10egypt',          name:'Eye of the Storm',         badge:'',     badgeColor:'', textColor:'' },
+
+    // ── KLASİK SLOTLAR ──
+    { symbol:'vs10goldfish',       name:'Gold Fish',                badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25goldfish2',      name:'Gold Fish 2',              badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20doghomnibingo',  name:'Cash Elevator',            badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20sparta',         name:'3 Kingdoms',               badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20asgard',         name:'Asgard',                   badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25viking',         name:'Sons of Ragnar',           badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25dwarves',        name:'7 Dwarfs Christmas',       badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25bjackdbas2',     name:'Black Bull',               badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20knifehat',       name:'Wild Depths',              badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25templ',          name:'Mysterious Egypt',         badge:'',     badgeColor:'', textColor:'' },
+
+    // ── YENİ ÇIKAN ──
+    { symbol:'vs10luckfortune',    name:'Luck & Fortune',           badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+    { symbol:'vs10cropaway',       name:'Crop Away',                badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+    { symbol:'vs25timberwolf',     name:'Timber Stacks',            badge:'YENİ', badgeColor:'#9b59b6', textColor:'#fff' },
+    { symbol:'vs20emptybank',      name:'Empty the Bank',           badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs50northgard',      name:'Wild Wild Riches',         badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25wwriches',       name:'Wild Wild Riches Megaways',badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs5littlegem',       name:'Little Gem',               badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs1explosiveReels',  name:'Explosive Reels',          badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20-super-x',       name:'Super X',                  badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20-piggybank',     name:'Piggy Bank Megaways',      badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs25mxmascarol',     name:'Magician\'s Secrets',      badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20hercpeg',        name:'Hercules and Pegasus',     badge:'',     badgeColor:'', textColor:'' },
+    { symbol:'vs20goldendiamonds', name:'Golden Diamonds',          badge:'',     badgeColor:'', textColor:'' },
 ];
 
 function renderGamesGrid() {
@@ -584,17 +652,18 @@ function renderGamesGrid() {
     if (!grid) return;
     grid.innerHTML = GAMES.map(g => `
         <div onclick="launchGame('${g.symbol}','${g.name}')" class="game-card-pp">
-            <img 
+            <img
                 src="https://cdn2.softswiss.net/i/s3/${g.symbol}.jpg"
-                onerror="this.src='https://cdn.softswiss.net/i/s4/pragmaticexternal/${g.symbol}.png'; this.onerror=function(){this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(g.name)}&background=1a1a2e&color=fff&bold=true&size=300'}"
+                onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(g.name)}&background=111827&color=1fcc5a&bold=true&size=300&font-size=0.3'"
                 alt="${g.name}"
+                loading="lazy"
             >
             <div class="play-overlay"><div class="play-btn">▶</div></div>
             <div class="card-body">
-                <div class="card-name">${g.name}™</div>
+                <div class="card-name">${g.name}</div>
                 <div class="card-provider">Pragmatic Play</div>
             </div>
-            ${g.badge ? `<div class="badge badge-${g.badge === 'HOT' ? 'hot' : g.badge === 'TOP' ? 'top' : 'new'}">${g.badge}</div>` : ''}
+            ${g.badge ? `<div class="badge" style="background:${g.badgeColor}; color:${g.textColor}; position:absolute; top:8px; right:8px; font-size:10px; padding:3px 8px; border-radius:5px; font-weight:800;">${g.badge}</div>` : ''}
         </div>
     `).join('');
 }
