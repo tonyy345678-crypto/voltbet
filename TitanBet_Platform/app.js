@@ -744,3 +744,58 @@ syncFromLocal = function() {
 syncFromLocal();
 generateBonanzaGrid();
 renderGamesGrid();
+renderAppGamesGrid();
+
+// ── APP İÇİ OYUN GRID ────────────────────────────────────
+function renderAppGamesGrid(list) {
+    const grid = document.getElementById('app-games-grid');
+    if (!grid) return;
+    const games = list || GAMES;
+    grid.innerHTML = games.map(g => `
+        <div onclick="launchGame('${g.symbol}','${g.name}')" style="border-radius:14px; overflow:hidden; cursor:pointer; position:relative; background:#111820; transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1); border:1px solid #1e2a38;">
+            <div style="position:relative; overflow:hidden;">
+                <img
+                    src="https://cdn2.softswiss.net/i/s3/${g.symbol}.jpg"
+                    onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(g.name)}&background=111827&color=1fcc5a&bold=true&size=300&font-size=0.3'"
+                    alt="${g.name}"
+                    loading="lazy"
+                    style="width:100%; aspect-ratio:3/2; object-fit:cover; display:block; background:#1a1a2e; transition:transform 0.3s;"
+                    onmouseover="this.style.transform='scale(1.07)'"
+                    onmouseout="this.style.transform='scale(1)'"
+                >
+                <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; opacity:0; transition:0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                    <div style="width:48px; height:48px; background:#1fcc5a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; color:#000; font-weight:900;">▶</div>
+                </div>
+                ${g.badge ? `<div style="position:absolute; top:8px; right:8px; background:${g.badgeColor}; color:${g.textColor}; font-size:10px; padding:3px 8px; border-radius:5px; font-weight:800;">${g.badge}</div>` : ''}
+            </div>
+            <div style="padding:8px 10px 10px;">
+                <div style="font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">${g.name}</div>
+                <div style="font-size:10px; color:#666; margin-top:2px;">Pragmatic Play</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+let _activeFilter = 'all';
+
+window.filterGames = function(type) {
+    _activeFilter = type;
+    // Buton stillerini güncelle
+    ['all','hot','new','top','megaways'].forEach(id => {
+        const btn = document.getElementById('filter-' + id);
+        if (btn) btn.style.background = id === type ? '#1fcc5a' : '#1e2a38';
+        if (btn) btn.style.color = id === type ? '#000' : '#fff';
+    });
+    let filtered = GAMES;
+    if (type === 'hot')      filtered = GAMES.filter(g => g.badge === 'HOT');
+    if (type === 'new')      filtered = GAMES.filter(g => g.badge === 'YENİ');
+    if (type === 'top')      filtered = GAMES.filter(g => g.badge === 'TOP');
+    if (type === 'megaways') filtered = GAMES.filter(g => g.name.toLowerCase().includes('megaways'));
+    renderAppGamesGrid(filtered);
+};
+
+window.searchGames = function(query) {
+    if (!query) { renderAppGamesGrid(); return; }
+    const q = query.toLowerCase();
+    renderAppGamesGrid(GAMES.filter(g => g.name.toLowerCase().includes(q)));
+};
