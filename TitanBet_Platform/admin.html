@@ -131,6 +131,12 @@
                         Personel Yönetimi
                     </div>
                 </div>
+                <div class="nav-btn" onclick="showTab('staff-detail')" id="nav-staff-detail" style="display:none; color:#00b4d8; margin-left:10px; font-size:13px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><line x1="16" y1="3" x2="22" y2="9"/><line x1="22" y1="3" x2="16" y2="9"/></svg>
+                        Personel Detay
+                    </div>
+                </div>
                 
                 <div class="nav-btn" onclick="showTab('settings')" id="nav-settings">
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -658,6 +664,22 @@
                             <!-- Staff list -->
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- PERSONEL DETAY SAYFASI (SÜPER ADMİN) -->
+            <section id="tab-staff-detail" class="tab-content">
+                <div class="section-card">
+                    <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                        <h3 style="margin:0;">Personel Detay Raporu</h3>
+                        <select id="staff-detail-select" onchange="renderStaffDetail()" style="padding:8px 14px; border:1px solid #333; border-radius:6px; background:#111820; color:#00b4d8; font-weight:bold; font-size:14px; cursor:pointer; outline:none;">
+                            <option value="">-- Personel Seç --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="staff-detail-body" style="margin-top:16px;">
+                    <div style="color:#666; text-align:center; padding:40px;">Yukarıdan bir personel seçin.</div>
                 </div>
             </section>
 

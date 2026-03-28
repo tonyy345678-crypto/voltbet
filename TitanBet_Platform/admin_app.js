@@ -98,6 +98,18 @@ function syncFromLocal() {
     tb_staff = JSON.parse(localStorage.getItem('tb_staff') || '[]');
     tb_tx_logs = JSON.parse(localStorage.getItem('tb_tx_logs') || '[]');
     
+    // ⚠️ MİGRASYON: 'Admin' gibi eski isim formatındaki reservedBy değerlerini temizle
+    let _pws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
+    let _migrated = false;
+    _pws.forEach(req => {
+        if (req.reservedBy && !req.reservedBy.includes('@')) {
+            delete req.reservedBy;
+            delete req.reservedAt;
+            _migrated = true;
+        }
+    });
+    if (_migrated) localStorage.setItem('tb_pending_withdraws', JSON.stringify(_pws));
+
     // UI Profile Update
     document.getElementById('footer-admin-name').innerText = currentAdmin.name;
     document.getElementById('footer-admin-role').innerText = currentAdmin.role === 'super' ? '(Süper Admin)' : '(Personel)';
@@ -171,6 +183,7 @@ function syncFromLocal() {
         if(document.getElementById('admin-total-balance')) document.getElementById('admin-total-balance').innerText = totalCash.toFixed(2) + ' ₺';
         
         renderStaffTable();
+        refreshStaffDetailDropdown();
     } else {
         // 2FA KONTROLÜ
         if(!currentAdmin.has2FA) {
@@ -564,17 +577,15 @@ function renderWithdraws() {
                     actionHtml = `<span style="color:#f39c12; font-size:11px; font-weight:bold;">Genel Havuzda</span>`;
                 }
 
-                // Atama dropdown — admin reserv edemez, sadece personele atayabilir
-                let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
-                let options = `<option value="">Personele Ata →</option>`;
-                staffList.forEach(s => {
-                    // value = 'Ad Soyad — email@domain.com' formatında
-                    let staffVal = `${s.name} — ${s.email}`;
-                    options += `<option value="${staffVal}">${s.name} (${s.email})</option>`;
+                // Atama dropdown — sadece email value olarak kullan
+                let staffListForAssign = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+                let assignOptions = `<option value="">Personele Ata →</option>`;
+                staffListForAssign.forEach(s => {
+                    assignOptions += `<option value="${s.email}">${s.name} (${s.email})</option>`;
                 });
                 actionHtml += `
                     <select onchange="if(this.value) assignWithdraw(${req.id}, this.value)" style="margin-top:6px; width:100%; border:1px dashed #0052cc; color:#0052cc; background:#f0f5ff; padding:3px 5px; border-radius:3px; outline:none; font-size:10px; cursor:pointer; font-weight:bold;">
-                        ${options}
+                        ${assignOptions}
                     </select>
                     <button onclick="rejectWithdraw(${req.id})" style="margin-top:4px; width:100%; background:#e11d48; border:none; color:#fff; padding:4px 8px; border-radius:3px; font-weight:600; cursor:pointer; font-size:11px;">İptal / Red</button>
                 `;
@@ -698,14 +709,12 @@ function releaseWithdraw(id) {
     }
 }
 
-window.assignWithdraw = function(id, staffVal) {
-    if (!staffVal) return;
-    // staffVal = 'Ad Soyad — email@domain.com' formatında olabilir, sadece email'i al
-    let email = staffVal.includes(' — ') ? staffVal.split(' — ')[1].trim() : staffVal.trim();
+window.assignWithdraw = function(id, staffEmail) {
+    if (!staffEmail || !staffEmail.includes('@')) return;
     let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
     let reqIndex = pendingWithdraws.findIndex(req => req.id === id);
     if(reqIndex !== -1) {
-        pendingWithdraws[reqIndex].reservedBy = email; // sadece email kaydet
+        pendingWithdraws[reqIndex].reservedBy = staffEmail; // direkt email
         pendingWithdraws[reqIndex].reservedAt = Date.now();
         pendingWithdraws[reqIndex].adminPool = false; // admin havuzundan çık
         localStorage.setItem('tb_pending_withdraws', JSON.stringify(pendingWithdraws));
@@ -1016,6 +1025,7 @@ function initAdminPanel() {
     if(currentAdmin.role === 'super') {
         // Super Admin
         if(document.getElementById('nav-staff')) document.getElementById('nav-staff').style.display = 'block';
+        if(document.getElementById('nav-staff-detail')) document.getElementById('nav-staff-detail').style.display = 'block';
         if(document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'block';
         if(document.getElementById('nav-deposits')) document.getElementById('nav-deposits').style.display = 'block';
         if(document.getElementById('nav-deposit-history')) document.getElementById('nav-deposit-history').style.display = 'block';
@@ -1211,6 +1221,166 @@ function renderStaffTable() {
         `;
     });
     tbody.innerHTML = html;
+}
+
+// ── PERSONEL DETAY RAPORU (SÜPER ADMİN) ────────────────────
+function populateStaffDetailSelect() {
+    const sel = document.getElementById('staff-detail-select');
+    if (!sel) return;
+    let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+    let cur = sel.value;
+    sel.innerHTML = '<option value="">-- Personel Seç --</option>';
+    staffList.forEach(s => {
+        sel.innerHTML += `<option value="${s.email}">${s.name} (${s.email})</option>`;
+    });
+    if (cur) sel.value = cur;
+}
+
+window.renderStaffDetail = function() {
+    const sel = document.getElementById('staff-detail-select');
+    const body = document.getElementById('staff-detail-body');
+    if (!sel || !body) return;
+    const email = sel.value;
+    if (!email) { body.innerHTML = '<div style="color:#666; text-align:center; padding:40px;">Yukarıdan bir personel seçin.</div>'; return; }
+
+    let staffList = JSON.parse(localStorage.getItem('tb_staff') || '[]');
+    let logs = JSON.parse(localStorage.getItem('tb_tx_logs') || '[]');
+    let depHistory = JSON.parse(localStorage.getItem('tb_deposit_history') || '[]');
+    let witHistory = JSON.parse(localStorage.getItem('tb_withdraw_history') || '[]');
+    let pendingWithdraws = JSON.parse(localStorage.getItem('tb_pending_withdraws') || '[]');
+
+    let staff = staffList.find(s => s.email === email);
+    if (!staff) { body.innerHTML = '<div style="color:#e11d48; padding:20px;">Personel bulunamadı.</div>'; return; }
+
+    // İSTATİSTİKLER
+    let staffLogs = logs.filter(tx => tx.staffEmail === email);
+    let totalDep = staffLogs.filter(tx => tx.type === 'deposit').reduce((s,x) => s + x.amount, 0);
+    let totalWit = staffLogs.filter(tx => tx.type === 'withdraw').reduce((s,x) => s + x.amount, 0);
+    let net = totalDep - totalWit;
+
+    let approved = depHistory.filter(h => h.processedBy === staff.name || (h.staffEmail === email));
+    let approvedDep = approved.filter(h => h.statusText === 'Onaylandı').length;
+    let rejectedDep = approved.filter(h => h.statusText === 'Reddedildi').length;
+
+    let approvedWit = witHistory.filter(h => (h.processedBy === staff.name || h.staffEmail === email) && h.statusText === 'Onaylandı').length;
+    let rejectedWit = witHistory.filter(h => (h.processedBy === staff.name || h.staffEmail === email) && h.statusText === 'Reddedildi').length;
+
+    // BEKLEYEN ÇEKİMLER
+    let myPending = pendingWithdraws.filter(r => r.reservedBy === email);
+
+    body.innerHTML = `
+    <!-- ÜST KASA KARTI -->
+    <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
+        <div class="section-card" style="flex:1; min-width:160px; text-align:center; border-top:3px solid #1fcc5a;">
+            <div style="font-size:11px; color:#888; margin-bottom:6px;">TOPLAM YATIRIM (Onayladığı)</div>
+            <div style="font-size:22px; font-weight:bold; color:#1fcc5a;">+${totalDep.toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</div>
+        </div>
+        <div class="section-card" style="flex:1; min-width:160px; text-align:center; border-top:3px solid #e11d48;">
+            <div style="font-size:11px; color:#888; margin-bottom:6px;">TOPLAM ÇEKİM (Ödediği)</div>
+            <div style="font-size:22px; font-weight:bold; color:#e11d48;">-${totalWit.toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</div>
+        </div>
+        <div class="section-card" style="flex:1; min-width:160px; text-align:center; border-top:3px solid ${net>=0?'#00b4d8':'#e11d48'};">
+            <div style="font-size:11px; color:#888; margin-bottom:6px;">NET KASA</div>
+            <div style="font-size:22px; font-weight:bold; color:${net>=0?'#00b4d8':'#e11d48'};">  ${net.toLocaleString('tr-TR',{minimumFractionDigits:2})} ₺</div>
+        </div>
+        <div class="section-card" style="flex:1; min-width:160px; text-align:center; border-top:3px solid #f59e0b;">
+            <div style="font-size:11px; color:#888; margin-bottom:4px;">YATIRIM: Onay / Red</div>
+            <div style="font-size:18px; font-weight:bold; color:#1fcc5a;">${approvedDep} <span style="color:#666;">/</span> <span style="color:#e11d48;">${rejectedDep}</span></div>
+        </div>
+        <div class="section-card" style="flex:1; min-width:160px; text-align:center; border-top:3px solid #a78bfa;">
+            <div style="font-size:11px; color:#888; margin-bottom:4px;">ÇEKİM: Onay / Red</div>
+            <div style="font-size:18px; font-weight:bold; color:#1fcc5a;">${approvedWit} <span style="color:#666;">/</span> <span style="color:#e11d48;">${rejectedWit}</span></div>
+        </div>
+        <div class="section-card" style="flex:1; min-width:160px; text-align:center; border-top:3px solid #f39c12;">
+            <div style="font-size:11px; color:#888; margin-bottom:4px;">El'indeki Bekleyen</div>
+            <div style="font-size:22px; font-weight:bold; color:#f39c12;">${myPending.length} adet</div>
+        </div>
+    </div>
+
+    <!-- BEKLEYEN ÇEKİMLER -->
+    ${myPending.length > 0 ? `
+    <div class="section-card" style="margin-bottom:20px;">
+        <h4 style="margin:0 0 12px 0; color:#f39c12;">Elindeki Bekleyen Çekimler</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead><tr style="color:#888; border-bottom:1px solid #333;">
+                <th style="padding:8px;">ID</th><th style="padding:8px;">Ad</th><th style="padding:8px;">IBAN</th><th style="padding:8px;">Tutar</th><th style="padding:8px;">Süre</th>
+            </tr></thead><tbody>
+            ${myPending.map(r => {
+                let mins = r.reservedAt ? Math.floor((Date.now()-r.reservedAt)/60000) : '-';
+                return `<tr style="border-bottom:1px solid #222;">
+                    <td style="padding:8px; color:#ccc;">${r.id}</td>
+                    <td style="padding:8px; color:#fff; font-weight:bold;">${r.name}</td>
+                    <td style="padding:8px; color:#00b4d8; font-size:11px;">${r.iban}</td>
+                    <td style="padding:8px; color:#f39c12; font-weight:bold;">&#8378;${r.amount.toLocaleString('tr-TR')}</td>
+                    <td style="padding:8px; color:#e11d48;">⏱️ ${mins} dk</td>
+                </tr>`;
+            }).join('')}
+            </tbody>
+        </table>
+    </div>` : ''}
+
+    <!-- YATIRIM GEÇMİŞİ -->
+    <div class="section-card" style="margin-bottom:20px;">
+        <h4 style="margin:0 0 12px 0; color:#1fcc5a;">Yatırım Geçmişi</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead><tr style="color:#888; border-bottom:1px solid #333;">
+                <th style="padding:8px;">ID</th><th style="padding:8px;">Banka</th><th style="padding:8px;">Tutar</th><th style="padding:8px;">Durum</th><th style="padding:8px;">Tarih</th>
+            </tr></thead><tbody>
+            ${depHistory.filter(h => h.staffEmail === email || h.processedBy === staff.name).length === 0
+                ? `<tr><td colspan="5" style="padding:15px; color:#666; text-align:center;">Kayıt yok</td></tr>`
+                : depHistory.filter(h => h.staffEmail === email || h.processedBy === staff.name).map(h => {
+                    let badge = h.statusText === 'Onaylandı'
+                        ? '<span style="background:#1fcc5a; color:#000; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:bold;">ONAY</span>'
+                        : '<span style="background:#e11d48; color:#fff; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:bold;">RED</span>';
+                    let d = new Date(h.processedDate||Date.now());
+                    return `<tr style="border-bottom:1px solid #222;">
+                        <td style="padding:8px; color:#ccc;">${h.id||'-'}</td>
+                        <td style="padding:8px; color:#ccc;">${h.bank||'-'}</td>
+                        <td style="padding:8px; font-weight:bold; color:#1fcc5a;">&#8378;${(h.amount||0).toLocaleString('tr-TR')}</td>
+                        <td style="padding:8px;">${badge}</td>
+                        <td style="padding:8px; color:#888; font-size:11px;">${d.toLocaleDateString('tr-TR')} ${d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}</td>
+                    </tr>`;
+                }).join('')
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ÇEKİM GEÇMİŞİ -->
+    <div class="section-card">
+        <h4 style="margin:0 0 12px 0; color:#e11d48;">Çekim Geçmişi</h4>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead><tr style="color:#888; border-bottom:1px solid #333;">
+                <th style="padding:8px;">ID</th><th style="padding:8px;">Alıcı</th><th style="padding:8px;">Tutar</th><th style="padding:8px;">Durum</th><th style="padding:8px;">Tarih</th>
+            </tr></thead><tbody>
+            ${witHistory.filter(h => h.staffEmail === email || h.processedBy === staff.name).length === 0
+                ? `<tr><td colspan="5" style="padding:15px; color:#666; text-align:center;">Kayıt yok</td></tr>`
+                : witHistory.filter(h => h.staffEmail === email || h.processedBy === staff.name).map(h => {
+                    let badge = h.statusText === 'Onaylandı'
+                        ? '<span style="background:#1fcc5a; color:#000; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:bold;">ONAY</span>'
+                        : '<span style="background:#e11d48; color:#fff; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:bold;">RED</span>';
+                    let d = new Date(h.processedDate||Date.now());
+                    return `<tr style="border-bottom:1px solid #222;">
+                        <td style="padding:8px; color:#ccc;">${h.id||'-'}</td>
+                        <td style="padding:8px; color:#ccc;">${h.name||'-'}</td>
+                        <td style="padding:8px; font-weight:bold; color:#e11d48;">&#8378;${(h.amount||0).toLocaleString('tr-TR')}</td>
+                        <td style="padding:8px;">${badge}</td>
+                        <td style="padding:8px; color:#888; font-size:11px;">${d.toLocaleDateString('tr-TR')} ${d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}</td>
+                    </tr>`;
+                }).join('')
+            }
+            </tbody>
+        </table>
+    </div>
+    `;
+};
+
+// Staff detail select'i her syncFromLocal'da doldur
+function refreshStaffDetailDropdown() {
+    populateStaffDetailSelect();
+    if (document.getElementById('tab-staff-detail')?.classList.contains('active')) {
+        renderStaffDetail();
+    }
 }
 
 window.adjustStaffBalance = function(email, isAdd) {
